@@ -3,472 +3,537 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MP Tool 版本進度</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <title>MP Tool 版本進度系統</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
-      background: #f0f2f5;
-      color: #1a1a2e;
-      min-height: 100vh;
-      padding: 32px 16px;
-    }
-
-    h1 {
-      text-align: center;
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 8px;
-      color: #1a1a2e;
-    }
-
-    .subtitle {
-      text-align: center;
-      font-size: 0.85rem;
-      color: #666;
-      margin-bottom: 20px;
-    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif; background: #f8fafc; color: #0f172a; min-height: 100vh; padding: 24px 16px; }
+    h1 { text-align: center; font-size: 1.6rem; font-weight: 700; margin-bottom: 6px; color: #0f172a; }
+    .subtitle { text-align: center; font-size: 0.85rem; color: #64748b; margin-bottom: 24px; }
 
     /* Auth bar */
-    .auth-bar {
-      max-width: 760px;
-      margin: 0 auto 20px;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 8px;
-    }
+    .auth-bar { max-width: 900px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+    .auth-badge { font-size: 0.78rem; padding: 4px 10px; border-radius: 99px; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; border: 1px solid transparent; }
+    .auth-badge.locked { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
+    .auth-badge.unlocked { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+    .auth-badge.user-email { background: #eff6ff; color: #4f46e5; border-color: #c7d2fe; }
 
-    .auth-badge {
-      font-size: 0.8rem;
-      padding: 5px 12px;
-      border-radius: 99px;
-      font-weight: 500;
-    }
+    .btn { font-size: 0.8rem; padding: 6px 14px; border-radius: 99px; border: 1px solid #cbd5e1; background: #fff; cursor: pointer; font-family: inherit; color: #334155; transition: 0.15s; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn:hover { background: #f8fafc; border-color: #94a3b8; }
+    .btn.primary { background: #0f172a; color: #fff; border-color: #0f172a; }
+    .btn.primary:hover { background: #1e293b; border-color: #1e293b; }
+    .btn.danger { border-color: #fca5a5; color: #ef4444; }
+    .btn.danger:hover { background: #fef2f2; }
+    .btn.outline-primary { color: #4f46e5; border-color: #c7d2fe; background: #eef2ff; }
+    .btn.outline-primary:hover { background: #e0e7ff; }
 
-    .auth-badge.locked {
-      background: #f1f5f9;
-      color: #64748b;
-      border: 1px solid #e2e8f0;
-    }
+    .view { display: none; margin-bottom: 40px; }
+    .view.active { display: block; padding-bottom: 40px; }
+    .max-w { max-width: 900px; margin: 0 auto; }
 
-    .auth-badge.unlocked {
-      background: #f0fdf4;
-      color: #16a34a;
-      border: 1px solid #bbf7d0;
-    }
+    /* Landing / Login View */
+    .landing-layout { display: flex; gap: 32px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; margin-top: 10px; }
+    .landing-main { flex: 1; min-width: 320px; }
+    .landing-main h2 { font-size: 1.15rem; margin-bottom: 16px; color: #1e293b; font-weight: 600; display:flex; align-items:center; gap:6px; }
+    
+    .login-container { width: 100%; max-width: 300px; background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 14px rgba(0,0,0,0.04); border: 1px solid #f1f5f9; text-align: center; }
+    .login-container h2 { margin-bottom: 16px; font-size: 1.05rem; font-weight: 600; }
+    .login-input { width: 100%; padding: 8px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; margin-bottom: 12px; outline: none; transition: 0.15s; }
+    .login-input:focus { border-color: #4f46e5; }
+    .login-btn { width: 100%; padding: 8px; border-radius: 8px; font-size: 0.88rem; font-weight: 500; cursor: pointer; border: none; margin-bottom: 10px; transition: 0.15s; display: flex; justify-content: center; align-items: center; gap: 8px; font-family: inherit; }
+    .btn-google { background: #fff; color: #334155; border: 1.5px solid #e2e8f0; }
+    .btn-google:hover { background: #f8fafc; border-color: #cbd5e1; }
+    .btn-email { background: #0f172a; color: white; }
+    .btn-email:hover { background: #1e293b; }
+    .divider { margin: 16px 0; color: #94a3b8; font-size: 0.75rem; position: relative; }
+    .divider::before, .divider::after { content: ''; position: absolute; top: 50%; width: 38%; height: 1px; background: #e2e8f0; }
+    .divider::before { left: 0; } .divider::after { right: 0; }
 
-    .auth-btn {
-      font-size: 0.8rem;
-      padding: 5px 14px;
-      border-radius: 99px;
-      border: 1px solid #d1d5db;
-      background: #fff;
-      cursor: pointer;
-      font-family: inherit;
-      color: #374151;
-      transition: background 0.15s, border-color 0.15s;
-    }
-    .auth-btn:hover { background: #f9fafb; border-color: #9ca3af; }
-    .auth-btn.logout { border-color: #fca5a5; color: #ef4444; }
-    .auth-btn.logout:hover { background: #fef2f2; }
+    /* Dashboard grids */
+    .dashboard-section { margin-bottom: 36px; padding: 24px; background: #fff; border-radius: 16px; box-shadow: 0 2px 14px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; }
+    .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9; }
+    .dashboard-header h2 { font-size: 1.15rem; color: #1e293b; font-weight: 600; display:flex; align-items:center; gap:6px; }
+    .checklist-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+    .checklist-card { background: #f8fafc; padding: 18px 20px; border-radius: 10px; text-decoration: none; color: inherit; transition: 0.2s; border: 1px solid #e2e8f0; display: block; position: relative; }
+    .checklist-card:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.05); border-color: #cbd5e1; background: #fff; }
+    .checklist-card h3 { font-size: 1.05rem; margin-bottom: 6px; color: #0f172a; }
+    .checklist-card p { font-size: 0.78rem; color: #64748b; }
+    .card-badge { position: absolute; top: 16px; right: 16px; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; border: 1px solid #c7d2fe; background: #eef2ff; color: #4f46e5; }
+    .card-badge.private { border-color: #e2e8f0; background: #f1f5f9; color: #64748b; }
 
-    /* Password modal */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.35);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-overlay.show { display: flex; }
+    /* Progress in Card */
+    .card-progress { margin-top: 14px; }
+    .card-progress-bar { background: #e2e8f0; border-radius: 99px; height: 6px; overflow: hidden; width: 100%; margin-bottom: 6px; }
+    .card-progress-fill { height: 100%; background: linear-gradient(90deg, #34d399, #16a34a); border-radius: 99px; transition: width 0.4s ease; width: 0%; }
+    .card-progress-text { font-size: 0.72rem; color: #64748b; font-weight: 500; }
 
-    .modal {
-      background: #fff;
-      border-radius: 16px;
-      padding: 28px 28px 24px;
-      width: 320px;
-      box-shadow: 0 8px 40px rgba(0,0,0,0.18);
-    }
-
-    .modal h2 {
-      font-size: 1rem;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: #1a1a2e;
-    }
-
-    .modal p {
-      font-size: 0.82rem;
-      color: #666;
-      margin-bottom: 16px;
-    }
-
-    .modal input[type="password"] {
-      width: 100%;
-      padding: 9px 12px;
-      border: 1.5px solid #d1d5db;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      font-family: inherit;
-      outline: none;
-      margin-bottom: 8px;
-      transition: border-color 0.15s;
-    }
-    .modal input[type="password"]:focus { border-color: #4b5563; }
-    .modal input[type="password"].error { border-color: #ef4444; }
-
-    .modal-error {
-      font-size: 0.78rem;
-      color: #ef4444;
-      min-height: 18px;
-      margin-bottom: 12px;
-    }
-
-    .modal-actions {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-    }
-
-    .modal-actions button {
-      padding: 7px 18px;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      font-family: inherit;
-      cursor: pointer;
-      border: 1.5px solid transparent;
-      transition: background 0.15s;
-    }
-
-    .btn-cancel {
-      background: #f1f5f9;
-      color: #475569;
-      border-color: #e2e8f0;
-    }
-    .btn-cancel:hover { background: #e2e8f0; }
-
-    .btn-confirm {
-      background: #1a1a2e;
-      color: #fff;
-    }
-    .btn-confirm:hover { background: #2d2d4e; }
-
+    /* Detail View specific */
+    .detail-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 12px; }
+    .detail-tools { width: 100%; display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+    
     /* Progress */
-    .progress-bar-wrap {
-      max-width: 760px;
-      margin: 0 auto 24px;
-      background: #dde1e7;
-      border-radius: 99px;
-      height: 10px;
-      overflow: hidden;
-    }
+    .progress-bar-wrap { background: #e2e8f0; border-radius: 99px; height: 8px; overflow: hidden; margin-bottom: 8px; width: 100%; min-width: 220px; }
+    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #34d399, #16a34a); border-radius: 99px; transition: width 0.4s ease; width: 0%; }
+    .progress-label { text-align: center; font-size: 0.8rem; color: #475569; font-weight: 500; }
 
-    .progress-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #4ade80, #22c55e);
-      border-radius: 99px;
-      transition: width 0.4s ease;
-      width: 0%;
-    }
-
-    .progress-label {
-      text-align: center;
-      font-size: 0.82rem;
-      color: #555;
-      margin-bottom: 24px;
-    }
-
-    .card {
-      max-width: 760px;
-      margin: 0 auto;
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
-      overflow: hidden;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    thead tr {
-      background: #1a1a2e;
-      color: #fff;
-    }
-
-    thead th {
-      padding: 14px 16px;
-      text-align: left;
-      font-size: 0.82rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    thead th:last-child {
-      text-align: center;
-      width: 120px;
-    }
-
-    tbody tr {
-      border-bottom: 1px solid #f0f2f5;
-      transition: background 0.15s;
-    }
-
+    /* Table */
+    .card-list { background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); overflow: hidden; width: 100%; overflow-x: auto; border: 1px solid #f1f5f9; }
+    table { width: 100%; border-collapse: collapse; min-width: 500px; }
+    thead tr { background: #0f172a; color: #fff; }
+    thead th { padding: 12px 16px; text-align: left; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.05em; }
+    thead th:last-child { text-align: center; width: 110px; }
+    tbody tr { border-bottom: 1px solid #f1f5f9; transition: background 0.15s; }
     tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: #f8f9fb; }
-
+    tbody tr:hover { background: #f8fafc; }
     tbody tr.done { background: #f0fdf4; }
     tbody tr.done:hover { background: #e8faf0; }
-
     tbody tr.in-progress { background: #fff7ed; }
     tbody tr.in-progress:hover { background: #ffedd5; }
+    td { padding: 10px 16px; font-size: 0.88rem; vertical-align: middle; }
+    
+    td.tool-version { font-weight: 600; color: #0f172a; }
+    .tool-input { width: 100%; border: 1px solid transparent; background: transparent; font-weight: 600; color: #0f172a; font-size: 0.88rem; outline: none; padding: 4px; border-radius: 4px; transition: 0.1s; }
+    .tool-input:focus { border-color: #cbd5e1; background: #fff; }
+    tbody tr.done td.tool-version, tbody tr.done .tool-input { color: #16a34a; text-decoration: line-through; text-decoration-color: #86efac; }
+    tbody tr.in-progress td.tool-version, tbody tr.in-progress .tool-input { color: #c2410c; }
 
-    td {
-      padding: 13px 16px;
-      font-size: 0.9rem;
-      vertical-align: middle;
-    }
+    td.branch { color: #64748b; font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.8rem; }
+    td.status-cell { text-align: center; width: 130px; }
+    
+    .branch-input { font-family: inherit; font-size: 0.8rem; color: #334155; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px; width: 100%; background: #f8fafc; transition: 0.15s; outline: none; }
+    .branch-input:focus { border-color: #4f46e5; background: #fff; }
 
-    td.tool-version { font-weight: 600; color: #1a1a2e; }
-    tbody tr.done td.tool-version {
-      color: #16a34a;
-      text-decoration: line-through;
-      text-decoration-color: #86efac;
-    }
-    tbody tr.in-progress td.tool-version { color: #c2410c; }
-
-    td.branch {
-      color: #555;
-      font-family: "SFMono-Regular", Consolas, monospace;
-      font-size: 0.82rem;
-    }
-    td.obsolete { color: #ef4444; font-size: 0.85rem; }
-
-    .branch-input {
-      font-family: "SFMono-Regular", Consolas, monospace;
-      font-size: 0.82rem;
-      color: #1a1a2e;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 6px;
-      padding: 4px 8px;
-      width: 100%;
-      background: #f8fafc;
-      transition: border-color 0.15s, background 0.15s;
-      outline: none;
-    }
-    .branch-input:focus {
-      border-color: #4b5563;
-      background: #fff;
-    }
-    .branch-input.saving { opacity: 0.5; }
-
-    td.status-cell { text-align: center; }
-
-    .status-select {
-      appearance: none;
-      -webkit-appearance: none;
-      border: 1.5px solid #d1d5db;
-      border-radius: 8px;
-      padding: 5px 28px 5px 10px;
-      font-size: 0.82rem;
-      font-family: inherit;
-      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 8px center;
-      cursor: pointer;
-      color: #1a1a2e;
-      transition: border-color 0.15s, opacity 0.15s;
-      min-width: 90px;
-    }
-    .status-select:hover { border-color: #6b7280; }
-    .status-select:focus { outline: none; border-color: #4b5563; }
-    .status-select.loading { opacity: 0.4; pointer-events: none; }
-    .status-select[data-status="未完成"] { border-color: #d1d5db; color: #6b7280; }
+    .status-select { appearance: none; -webkit-appearance: none; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 26px 4px 10px; font-size: 0.8rem; font-family: inherit; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 8px center; cursor: pointer; color: #0f172a; min-width: 85px; }
+    .status-select:focus { outline: none; border-color: #4f46e5; }
+    .status-select[data-status="未完成"] { border-color: #cbd5e1; color: #475569; }
     .status-select[data-status="進行中"] { border-color: #f97316; color: #c2410c; background-color: #fff7ed; }
     .status-select[data-status="已完成"] { border-color: #22c55e; color: #16a34a; background-color: #f0fdf4; }
 
-    /* Read-only badge */
-    .status-badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 99px;
-      font-size: 0.78rem;
-      font-weight: 500;
-      min-width: 64px;
-      text-align: center;
-    }
+    .status-badge { display: inline-block; padding: 4px 10px; border-radius: 99px; font-size: 0.72rem; font-weight: 500; min-width: 60px; text-align: center; }
     .status-badge.未完成 { background: #f1f5f9; color: #64748b; }
     .status-badge.進行中 { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
     .status-badge.已完成 { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
 
-    .status-toast {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%) translateY(60px);
-      background: #1a1a2e;
-      color: #fff;
-      padding: 10px 20px;
-      border-radius: 99px;
-      font-size: 0.85rem;
-      opacity: 0;
-      transition: transform 0.3s ease, opacity 0.3s ease;
-      pointer-events: none;
-      white-space: nowrap;
-      z-index: 999;
-    }
+    .action-cell { text-align: right; width: 45px; }
+    .btn-delete { color: #f87171; cursor: pointer; background: transparent; border: none; font-size: 1.1rem; opacity: 0.6; transition: 0.2s; padding: 4px; border-radius: 4px; }
+    .btn-delete:hover { opacity: 1; background: #fef2f2; color: #ef4444; }
+
+    .status-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(60px); background: #0f172a; color: #fff; padding: 10px 20px; border-radius: 99px; font-size: 0.85rem; opacity: 0; transition: transform 0.3s ease, opacity 0.3s ease; pointer-events: none; white-space: nowrap; z-index: 999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
     .status-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-    .spinner {
-      text-align: center;
-      padding: 40px;
-      color: #999;
-      font-size: 0.9rem;
-    }
-
-    @media (max-width: 560px) {
-      td, th { padding: 11px 10px; }
-      td.branch { display: none; }
-      thead th:nth-child(2) { display: none; }
-      .status-select { min-width: 78px; font-size: 0.78rem; }
+    
+    .spinner { text-align: center; padding: 40px; color: #94a3b8; font-size: 0.85rem; width: 100%; }
+    .empty-state { text-align: center; padding: 40px 20px; color: #64748b; width: 100%; border: 1px dashed #cbd5e1; border-radius: 10px; font-size: 0.9rem; }
+    
+    @media (max-width: 640px) {
+      .landing-layout { flex-direction: column-reverse; align-items: center; }
+      .login-container { max-width: 100%; }
+      td, th { padding: 10px 8px; }
+      thead th:nth-child(2), td.branch { display: none; }
+      .detail-tools { flex-direction: column; align-items: stretch; }
+      .detail-tools > div { width: 100%; margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
     }
   </style>
 </head>
 <body>
 
-  <h1>MP Tool 版本進度</h1>
-
-
-  <div class="auth-bar">
-    <span class="auth-badge locked" id="authBadge">🔒 瀏覽模式</span>
-    <button class="auth-btn" id="authBtn" onclick="handleAuthBtn()">解鎖編輯</button>
+  <!-- Top Auth Bar -->
+  <div class="auth-bar" id="authBar" style="display: none;">
+    <a href="?" class="btn" id="homeBtn" style="margin-right: auto;">← 回首頁/儀表板</a>
+    <span class="auth-badge user-email" id="userEmailBadge"></span>
+    <span class="auth-badge locked" id="authBadge" style="display:none;"></span>
+    <button class="btn danger" onclick="signOut()">登出</button>
   </div>
 
-  <div class="progress-bar-wrap">
-    <div class="progress-bar-fill" id="progressFill"></div>
-  </div>
-  <p class="progress-label" id="progressLabel">載入中...</p>
+  <!-- Landing / Login View -->
+  <div id="view-login" class="view max-w">
+    <div style="text-align: center; margin-bottom: 20px;">
+      <img src="./logo.svg" alt="ProgressBar Logo" style="max-height: 120px; object-fit: contain; width: auto;" />
+    </div>
+    <p class="subtitle">簡單追蹤進度</p>
+    
+    <div class="landing-layout">
+      <!-- Public Lists Display -->
+      <div class="landing-public-section">
+        <h2>🌍 公開進度</h2>
+        <div class="checklist-grid" id="landingPublicList">
+          <div class="spinner">載入公開表單中...</div>
+        </div>
+      </div>
 
-  <div class="card">
-    <table>
-      <thead>
-        <tr>
-          <th>MP Tool 版本</th>
-          <th>Branch</th>
-          <th>狀態</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody">
-        <tr><td colspan="3" class="spinner">載入資料中...</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="status-toast" id="toast"></div>
-
-  <!-- Password Modal -->
-  <div class="modal-overlay" id="modalOverlay">
-    <div class="modal">
-      <h2>輸入編輯密碼</h2>
-      <p>請輸入密碼以解鎖編輯功能</p>
-      <input type="password" id="pwInput" placeholder="密碼" onkeydown="if(event.key==='Enter') submitPw()" />
-      <div class="modal-error" id="pwError"></div>
-      <div class="modal-actions">
-        <button class="btn-cancel" onclick="closeModal()">取消</button>
-        <button class="btn-confirm" onclick="submitPw()">確認</button>
+      <!-- Compact Login -->
+      <div class="login-container">
+        <h2>登入以建立表單</h2>
+        <button class="login-btn btn-google" onclick="signInWithProvider('google')">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Google 帳號登入
+        </button>
+        <div class="divider">或透過 Email</div>
+        <input type="email" id="emailInput" class="login-input" placeholder="輸入 Email" />
+        <button class="login-btn btn-email" onclick="signInWithEmail()">發送登入連結 (Magic Link)</button>
       </div>
     </div>
   </div>
 
+  <!-- Dashboard View (Logged in) -->
+  <div id="view-dashboard" class="view max-w">
+    <div style="text-align: center; margin-bottom: 24px;">
+      <img src="./logo.svg" alt="ProgressBar Logo" style="max-height: 80px; object-fit: contain; width: auto;" />
+    </div>
+    <p class="subtitle" style="margin-bottom: 24px;">管理您的專案與進度</p>
+
+    <!-- My Checklists -->
+    <div class="dashboard-section">
+      <div class="dashboard-header">
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <h2>👤 我的進度表</h2>
+          <button class="btn" style="padding: 4px 10px; font-size: 0.75rem;" onclick="setNickname()">✏️ 設定我的對外暱稱</button>
+        </div>
+        <button class="btn primary" onclick="createChecklist()">+ 建立新表單</button>
+      </div>
+      <div class="checklist-grid" id="dashboardMyList">
+        <div class="spinner">載入中...</div>
+      </div>
+    </div>
+
+    <!-- Others Public Checklists -->
+    <div class="dashboard-section">
+      <div class="dashboard-header">
+        <h2>🌍 他人公開的進度表</h2>
+      </div>
+      <div class="checklist-grid" id="dashboardPublicList">
+        <div class="spinner">載入中...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- List Detail View -->
+  <div id="view-list" class="view max-w">
+    <div class="detail-header">
+      <h1 id="listTitle">載入中...</h1>
+      <p class="subtitle" id="listOwnerDate"></p>
+    </div>
+
+    <div class="detail-tools">
+      <div style="flex:1; max-width: 320px;">
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="progressFill"></div>
+        </div>
+        <p class="progress-label" id="progressLabel">載入中...</p>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-left: 16px;">
+        <button class="btn" id="btnTogglePublic" onclick="togglePublicStatus()" style="display:none;"></button>
+        <button class="btn outline-primary" onclick="copyShareLink()">📋 複製分享網址</button>
+        <button class="btn primary" id="btnAddNewRow" onclick="addNewRow()" style="display:none;">+ 新增項目</button>
+      </div>
+    </div>
+
+    <div class="card-list">
+      <table>
+        <thead>
+          <tr>
+            <th>工具/項目名稱</th>
+            <th>Branch</th>
+            <th>狀態</th>
+            <th id="actionHeader" style="display:none; width: 60px;"></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="4" class="spinner">載入資料中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="status-toast" id="toast"></div>
+
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
+    (function() {
+      if (!window.supabase) {
+        document.body.innerHTML = '<h3 style="color:red;padding:40px;text-align:center;line-height:1.6;">嚴重錯誤：無法載入 Supabase 核心套件 (CDN 連線失敗)。<br><br>這通常是因為「廣告阻擋工具 (AdBlocker)」或「嚴格追蹤保護」攔截了外部腳本。<br>👉 請嘗試「關閉廣告阻擋」或「使用無痕模式」後重新整理此網頁！</h3>';
+        return;
+      }
     const SUPABASE_URL = 'https://iotjuquhpqctgsnetmnc.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlvdGp1cXVocHFjdGdzbmV0bW5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMjE0MjksImV4cCI6MjA4OTg5NzQyOX0.lRgfA3WeNodUKFbjCGeda-YqYwNZTNiKhV3MC-3XyC0';
-    const EDIT_PASSWORD = '0x20071102';
-
-    const headers = {
-      'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=minimal'
-    };
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const STATUSES = ['未完成', '進行中', '已完成'];
+    let session = null;
     let data = [];
-    let isUnlocked = sessionStorage.getItem('mp_unlocked') === '1';
+    let currentChecklist = null; 
+    let isOwner = false;
 
-    // --- Auth ---
-    function handleAuthBtn() {
-      if (isUnlocked) {
-        isUnlocked = false;
-        sessionStorage.removeItem('mp_unlocked');
+    const params = new URLSearchParams(window.location.search);
+    const listId = params.get('list_id');
+
+    window.signInWithProvider = async (provider) => {
+      const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.href } });
+      if (error) alert(error.message);
+    };
+
+    window.signInWithEmail = async () => {
+      const email = document.getElementById('emailInput').value;
+      if (!email) return alert('請輸入 Email');
+      const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
+      if (error) alert(error.message);
+      else alert('登入連結已發送至您的信箱，請點擊連結登入！');
+    };
+
+    window.signOut = async () => { await supabase.auth.signOut(); };
+
+    // Initialize app correctly to avoid deadlocks & guarantee startup
+    supabase.auth.getSession().then(({ data: { session: _session } }) => {
+      session = _session;
+      updateAuthUI();
+      renderApp().catch(e => alert("系統錯誤: " + e.message));
+
+      // Listen for future auth changes (login/logout), completely ignoring the initial event
+      supabase.auth.onAuthStateChange(async (event, _session2) => {
+        if (event === 'INITIAL_SESSION') return;
+        session = _session2;
         updateAuthUI();
-        renderTable();
-      } else {
-        openModal();
-      }
-    }
-
-    function openModal() {
-      document.getElementById('pwInput').value = '';
-      document.getElementById('pwError').textContent = '';
-      document.getElementById('pwInput').classList.remove('error');
-      document.getElementById('modalOverlay').classList.add('show');
-      setTimeout(() => document.getElementById('pwInput').focus(), 100);
-    }
-
-    function closeModal() {
-      document.getElementById('modalOverlay').classList.remove('show');
-    }
-
-    function submitPw() {
-      const val = document.getElementById('pwInput').value;
-      if (val === EDIT_PASSWORD) {
-        isUnlocked = true;
-        sessionStorage.setItem('mp_unlocked', '1');
-        closeModal();
-        updateAuthUI();
-        renderTable();
-        showToast('🔓 已解鎖編輯');
-      } else {
-        document.getElementById('pwError').textContent = '密碼錯誤，請重試';
-        document.getElementById('pwInput').classList.add('error');
-        document.getElementById('pwInput').value = '';
-        document.getElementById('pwInput').focus();
-      }
-    }
-
-    function updateAuthUI() {
-      const badge = document.getElementById('authBadge');
-      const btn = document.getElementById('authBtn');
-      if (isUnlocked) {
-        badge.textContent = '🔓 編輯模式';
-        badge.className = 'auth-badge unlocked';
-        btn.textContent = '鎖定';
-        btn.className = 'auth-btn logout';
-      } else {
-        badge.textContent = '🔒 瀏覽模式';
-        badge.className = 'auth-badge locked';
-        btn.textContent = '解鎖編輯';
-        btn.className = 'auth-btn';
-      }
-    }
-
-    // Close modal on overlay click
-    document.getElementById('modalOverlay').addEventListener('click', function(e) {
-      if (e.target === this) closeModal();
+        await renderApp().catch(e => alert("系統錯誤: " + e.message));
+      });
     });
 
-    // --- Data ---
-    async function loadData() {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/mp_tool_checklist?order=id.asc`, { headers });
-      data = await res.json();
+    function updateAuthUI() {
+      const authBar = document.getElementById('authBar');
+      const authBadge = document.getElementById('authBadge');
+      if (session) {
+        authBar.style.display = 'flex';
+        document.getElementById('userEmailBadge').textContent = '👤 ' + session.user.email;
+        const hc = document.getElementById('homeBtn');
+        hc.style.display = listId ? 'inline-flex' : 'none';
+        authBadge.style.display = 'none';
+      } else {
+        if (listId) {
+          authBar.style.display = 'flex';
+          document.getElementById('userEmailBadge').textContent = '👤 訪客';
+          document.getElementById('homeBtn').style.display = 'inline-flex';
+          document.querySelector('#authBar .danger').style.display = 'none'; 
+          authBadge.style.display = 'none';
+        } else {
+          authBar.style.display = 'none';
+        }
+      }
+    }
+
+    async function renderApp() {
+      if (listId) {
+        showView('view-list');
+        await loadChecklistDetail();
+      } else {
+        if (session) {
+          showView('view-dashboard');
+          await loadDashboard();
+        } else {
+          showView('view-login');
+          await loadLandingPublicLists();
+        }
+      }
+    }
+
+    function showView(viewId) {
+      ['view-login', 'view-dashboard', 'view-list'].forEach(id => {
+        document.getElementById(id).classList.remove('active');
+      });
+      document.getElementById(viewId).classList.add('active');
+    }
+
+    // --- Components ---
+    function buildCardHTML(list, isMine) {
+      const badgeHTML = list.is_public 
+        ? `<span class="card-badge public">🌍 已公開</span>`
+        : `<span class="card-badge private">🔒 私人</span>`;
+        
+      const ownerName = list.profiles?.nickname || list.profiles?.email || '未知使用者';
+      const items = list.mp_tool_checklist || [];
+      const total = items.length;
+      const done = items.filter(i => i.status === '已完成').length;
+      const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+      
+      const progressHTML = `
+        <div class="card-progress">
+          <div class="card-progress-bar"><div class="card-progress-fill" style="width:${pct}%"></div></div>
+          <div class="card-progress-text">已完成 ${done} / ${total} (${pct}%)</div>
+        </div>
+      `;
+
+      return `
+        <a href="?list_id=${list.id}" class="checklist-card">
+          <h3>${escHtml(list.title)}</h3>
+          <p style="margin-bottom: 2px;">建立者：<strong>${escHtml(ownerName)}</strong></p>
+          <p>建立於：${new Date(list.created_at).toLocaleDateString()}</p>
+          ${progressHTML}
+          ${isMine ? badgeHTML : ''}
+        </a>
+      `;
+    }
+
+    // --- Landing View ---
+    async function loadLandingPublicLists() {
+      try {
+        const { data: publicLists, error } = await supabase
+          .from('checklists')
+          .select('*, mp_tool_checklist(status), profiles(nickname, email)')
+          .eq('is_public', true)
+          .order('created_at', { ascending: false });
+
+        const grid = document.getElementById('landingPublicList');
+        if (error || !publicLists || publicLists.length === 0) {
+          grid.innerHTML = '<div class="empty-state">目前還沒有公開的表單哦！(或發生錯誤: ' + (error?.message || '') + ')</div>';
+          return;
+        }
+        grid.innerHTML = publicLists.map(list => buildCardHTML(list, false)).join('');
+      } catch (err) {
+        console.error("loadLandingPublicLists Error:", err);
+      }
+    }
+
+    // --- Dashboard View --- 
+    async function loadDashboard() {
+      try {
+        // Load My Lists
+        const { data: myLists, error: e1 } = await supabase.from('checklists').select('*, mp_tool_checklist(status), profiles(nickname, email)')
+          .eq('user_id', session.user.id).order('created_at', { ascending: false });
+        
+        const myGrid = document.getElementById('dashboardMyList');
+        if (!myLists || myLists.length === 0 || e1) {
+          myGrid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">尚無表單，點擊上方按鈕建立！' + (e1 ? '(錯誤: '+e1.message+')' : '') + '</div>';
+        } else {
+          myGrid.innerHTML = myLists.map(l => buildCardHTML(l, true)).join('');
+        }
+
+      // Load Others Public Lists
+      const { data: publicLists, error: e2 } = await supabase.from('checklists').select('*, mp_tool_checklist(status), profiles(nickname, email)')
+        .eq('is_public', true).neq('user_id', session.user.id).order('created_at', { ascending: false });
+
+      const pubGrid = document.getElementById('dashboardPublicList');
+      if (!publicLists || publicLists.length === 0 || e2) {
+        pubGrid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">目前還沒有別人發布公開表單哦！' + (e2 ? '(錯誤: '+e2.message+')' : '') + '</div>';
+      } else {
+        pubGrid.innerHTML = publicLists.map(l => buildCardHTML(l, false)).join('');
+      }
+      } catch (err) {
+        console.error("loadDashboard Error:", err);
+      }
+    }
+
+    window.setNickname = async () => {
+      const nick = prompt('請輸入您希望對外公開顯示的稱呼：\n(若為空白，系統將預設顯示您的 Email)');
+      if (nick === null) return;
+      const { error } = await supabase.from('profiles').update({ nickname: nick.trim() || null }).eq('id', session.user.id);
+      if (error) alert('設定暱稱失敗: ' + error.message);
+      else {
+        showToast('✨ 暱稱已成功更新！');
+        await loadDashboard();
+      }
+    };
+
+    window.createChecklist = async () => {
+      const title = prompt('請輸入新表單的名稱：', '新建進度清單');
+      if (!title) return;
+      const { data: newList, error } = await supabase.from('checklists')
+        .insert([{ user_id: session.user.id, title, is_public: false }])
+        .select().single();
+      
+      if (error) alert('建立失敗: ' + error.message);
+      else window.location.href = `?list_id=${newList.id}`;
+    };
+
+    // --- Detail View ---
+    async function loadChecklistDetail() {
+      const { data: listData, error: listError } = await supabase.from('checklists')
+        .select('*, profiles(nickname, email)').eq('id', listId).single();
+
+      if (listError || !listData) {
+        document.getElementById('listTitle').textContent = '⚠️ 找不到表單或無權限';
+        document.getElementById('tableBody').innerHTML = '<tr><td colspan="4" class="empty-state">表單不存在</td></tr>';
+        return;
+      }
+
+      currentChecklist = listData;
+      isOwner = session && session.user.id === currentChecklist.user_id;
+
+      let titleLabel = currentChecklist.title;
+      // Show explicit marker next to title if viewing someone else's public list
+      if (!isOwner && currentChecklist.is_public) {
+        titleLabel += ' 🌍';
+      }
+
+      document.getElementById('listTitle').textContent = titleLabel;
+      const ownerName = currentChecklist.profiles?.nickname || currentChecklist.profiles?.email || '未知使用者';
+      document.getElementById('listOwnerDate').innerHTML = `建立者：<strong>${escHtml(ownerName)}</strong> &nbsp;•&nbsp; 建立於：${new Date(currentChecklist.created_at).toLocaleDateString()}`;
+
+      const authBadge = document.getElementById('authBadge');
+      authBadge.style.display = 'inline-flex';
+      if (isOwner) {
+        authBadge.textContent = '🔓 擁有者 / 可編輯';
+        authBadge.className = 'auth-badge unlocked';
+        document.getElementById('btnAddNewRow').style.display = 'inline-flex';
+        document.getElementById('actionHeader').style.display = 'table-cell';
+        
+        const btnToggle = document.getElementById('btnTogglePublic');
+        btnToggle.style.display = 'inline-flex';
+        updateToggleBtnUI(currentChecklist.is_public);
+      } else {
+        authBadge.textContent = '🔒 唯讀瀏覽模式';
+        authBadge.className = 'auth-badge locked';
+        document.getElementById('btnAddNewRow').style.display = 'none';
+        document.getElementById('actionHeader').style.display = 'none';
+        document.getElementById('btnTogglePublic').style.display = 'none';
+      }
+
+      await loadItems();
+    }
+
+    function updateToggleBtnUI(isPublic) {
+      const btn = document.getElementById('btnTogglePublic');
+      if (isPublic) {
+        btn.textContent = '🌍 狀態：已公開 (切換為私人)';
+        btn.className = 'btn outline-primary';
+      } else {
+        btn.textContent = '🔒 狀態：私有表單 (設為公開)';
+        btn.className = 'btn';
+      }
+    }
+
+    window.togglePublicStatus = async () => {
+      const newVal = !currentChecklist.is_public;
+      const { error } = await supabase.from('checklists').update({ is_public: newVal }).eq('id', listId);
+      if (!error) {
+        currentChecklist.is_public = newVal;
+        updateToggleBtnUI(newVal);
+        showToast(newVal ? '✨ 表單已公開！別人將可在首頁看到' : '🔒 表單已設為私人');
+      } else {
+        showToast('⚠️ 切換失敗');
+      }
+    };
+
+    async function loadItems() {
+      const { data: itemsData, error } = await supabase.from('mp_tool_checklist').select('*').eq('checklist_id', listId).order('id', { ascending: true });
+      if (error) return console.error(error);
+      data = itemsData || [];
       renderTable();
       updateProgress();
     }
+
+    window.addNewRow = async () => {
+      const toolName = prompt('請輸入新增項目的名稱：');
+      if (!toolName) return;
+      const { data: newItem, error } = await supabase.from('mp_tool_checklist')
+        .insert([{ checklist_id: listId, tool_version: toolName, status: '未完成', branch: '' }]).select().single();
+      if (error) alert('新增失敗: ' + error.message);
+      else { data.push(newItem); renderTable(); updateProgress(); showToast('已新增項目'); }
+    };
+
+    window.deleteRow = async (id) => {
+      if (!confirm('確定要刪除這個項目嗎？')) return;
+      const { error } = await supabase.from('mp_tool_checklist').delete().eq('id', id);
+      if (error) alert('刪除失敗: ' + error.message);
+      else { data = data.filter(r => r.id !== id); renderTable(); updateProgress(); showToast('已刪除'); }
+    };
 
     function rowClass(status) {
       if (status === '已完成') return 'done';
@@ -479,75 +544,60 @@
     function renderTable() {
       const tbody = document.getElementById('tableBody');
       tbody.innerHTML = '';
+      if (data.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="empty-state">尚無進度項目</td></tr>`; return; }
+
       data.forEach(row => {
         const tr = document.createElement('tr');
         const cls = rowClass(row.status);
         if (cls) tr.classList.add(cls);
 
-        const isObsolete = row.branch === '過舊/不可考';
-
-        let statusCell;
-        let branchCell;
-        if (isUnlocked) {
-          const options = STATUSES.map(s =>
-            `<option value="${s}" ${row.status === s ? 'selected' : ''}>${s}</option>`
-          ).join('');
+        let statusCell, branchCell, nameCell, actionCell = '';
+        
+        if (isOwner) {
+          nameCell = `<input class="tool-input" type="text" value="${escAttr(row.tool_version || '')}" onblur="saveField(${row.id}, 'tool_version', this)" onkeydown="if(event.key==='Enter') this.blur()" />`;
+          const options = STATUSES.map(s => `<option value="${s}" ${row.status === s ? 'selected' : ''}>${s}</option>`).join('');
           statusCell = `<select class="status-select" data-id="${row.id}" data-status="${row.status}" onchange="changeStatus(${row.id}, this)">${options}</select>`;
-          branchCell = `<td class="branch"><input class="branch-input" type="text" value="${escAttr(row.branch || '')}" data-id="${row.id}" data-orig="${escAttr(row.branch || '')}" onblur="saveBranch(${row.id}, this)" onkeydown="if(event.key==='Enter') this.blur()" /></td>`;
+          branchCell = `<td class="branch"><input class="branch-input" type="text" value="${escAttr(row.branch || '')}" onblur="saveField(${row.id}, 'branch', this)" onkeydown="if(event.key==='Enter') this.blur()" /></td>`;
+          actionCell = `<td class="action-cell"><button class="btn-delete" onclick="deleteRow(${row.id})" title="刪除">✕</button></td>`;
         } else {
+          nameCell = `<span class="tool-version">${escHtml(row.tool_version || '')}</span>`;
           statusCell = `<span class="status-badge ${row.status}">${row.status}</span>`;
-          branchCell = `<td class="branch ${isObsolete ? 'obsolete' : ''}">${escHtml(row.branch || '')}</td>`;
+          branchCell = `<td class="branch">${escHtml(row.branch || '')}</td>`;
         }
 
-        tr.innerHTML = `
-          <td class="tool-version">${escHtml(row.tool_version)}</td>
-          ${branchCell}
-          <td class="status-cell">${statusCell}</td>
-        `;
+        tr.innerHTML = `<td>${nameCell}</td>${branchCell}<td class="status-cell">${statusCell}</td>${actionCell}`;
         tbody.appendChild(tr);
       });
     }
 
-    async function changeStatus(id, select) {
+    window.changeStatus = async (id, select) => {
       const newStatus = select.value;
-      select.classList.add('loading');
       select.dataset.status = newStatus;
-
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/mp_tool_checklist?id=eq.${id}`,
-        {
-          method: 'PATCH',
-          headers,
-          body: JSON.stringify({
-            status: newStatus,
-            checked: newStatus === '已完成',
-            updated_at: new Date().toISOString()
-          })
-        }
-      );
-
-      if (res.ok) {
+      const { error } = await supabase.from('mp_tool_checklist').update({ status: newStatus, checked: newStatus === '已完成', updated_at: new Date().toISOString() }).eq('id', id);
+      if (!error) {
         const row = data.find(r => r.id === id);
-        row.status = newStatus;
-        row.checked = newStatus === '已完成';
-
+        row.status = newStatus; row.checked = newStatus === '已完成';
         const tr = select.closest('tr');
-        tr.className = '';
-        const cls = rowClass(newStatus);
-        if (cls) tr.classList.add(cls);
-
+        tr.className = ''; const cls = rowClass(newStatus); if (cls) tr.classList.add(cls);
         const toastMap = { '已完成': '✓ 已標記完成', '進行中': '⏳ 進行中', '未完成': '已重設為未完成' };
-        showToast(toastMap[newStatus]);
-        updateProgress();
-      } else {
-        showToast('⚠️ 儲存失敗，請重試');
-        const row = data.find(r => r.id === id);
-        select.value = row.status;
-        select.dataset.status = row.status;
-      }
+        showToast(toastMap[newStatus]); updateProgress();
+      } else { showToast('⚠️ 狀態更新失敗'); }
+    };
 
-      select.classList.remove('loading');
-    }
+    window.saveField = async (id, fieldName, input) => {
+      const newVal = input.value.trim();
+      const row = data.find(r => r.id === id);
+      if (newVal === row[fieldName]) return;
+      input.style.opacity = '0.5';
+      const { error } = await supabase.from('mp_tool_checklist').update({ [fieldName]: newVal, updated_at: new Date().toISOString() }).eq('id', id);
+      input.style.opacity = '1';
+      if (!error) { row[fieldName] = newVal; showToast('已自動儲存'); } 
+      else { input.value = row[fieldName]; showToast('⚠️ 儲存失敗'); }
+    };
+
+    window.copyShareLink = () => {
+      navigator.clipboard.writeText(window.location.href).then(() => showToast('✨ 共用網址已複製！')).catch(() => showToast('複製失敗'));
+    };
 
     function updateProgress() {
       const total = data.length;
@@ -555,54 +605,18 @@
       const inProg = data.filter(r => r.status === '進行中').length;
       const pct = total ? Math.round((done / total) * 100) : 0;
       document.getElementById('progressFill').style.width = pct + '%';
-      document.getElementById('progressLabel').textContent =
-        `已完成 ${done} / ${total}（${pct}%）` + (inProg > 0 ? `　進行中 ${inProg}` : '');
+      document.getElementById('progressLabel').textContent = `已完成 ${done} / ${total}（${pct}%）` + (inProg > 0 ? `　進行中 ${inProg}` : '');
     }
 
     function showToast(msg) {
       const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.classList.add('show');
+      t.textContent = msg; t.classList.add('show');
       setTimeout(() => t.classList.remove('show'), 2000);
     }
 
-    async function saveBranch(id, input) {
-      const newVal = input.value.trim();
-      const orig = input.dataset.orig;
-      if (newVal === orig) return;
-      input.classList.add('saving');
-
-      const res = await fetch(
-        `${SUPABASE_URL}/rest/v1/mp_tool_checklist?id=eq.${id}`,
-        {
-          method: 'PATCH',
-          headers,
-          body: JSON.stringify({ branch: newVal, updated_at: new Date().toISOString() })
-        }
-      );
-
-      if (res.ok) {
-        const row = data.find(r => r.id === id);
-        row.branch = newVal;
-        input.dataset.orig = newVal;
-        showToast('Branch 已儲存');
-      } else {
-        input.value = orig;
-        showToast('⚠️ 儲存失敗，請重試');
-      }
-      input.classList.remove('saving');
-    }
-
-    function escHtml(s) {
-      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
-
-    function escAttr(s) {
-      return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
-
-    updateAuthUI();
-    loadData();
+    function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function escAttr(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    })();
   </script>
 </body>
 </html>

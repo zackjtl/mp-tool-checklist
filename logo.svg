@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 70">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="50%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#a3e635" />
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity="0.08" />
+    </filter>
+  </defs>
+  
+  <g transform="translate(25, 0)">
+    <!-- Outer Frame -->
+    <rect x="0" y="4" width="150" height="28" rx="14" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" filter="url(#shadow)" />
+    <!-- Progress Bar Fill -->
+    <rect x="3" y="7" width="115" height="22" rx="11" fill="url(#grad)" />
+  </g>
+
+  <!-- Text -->
+  <text x="100" y="60" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="800" font-size="28" fill="#0f172a" text-anchor="middle" letter-spacing="-1">ProgressBar</text>
+</svg>

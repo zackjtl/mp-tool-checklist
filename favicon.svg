@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0ea5e9" />
+      <stop offset="50%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#84cc16" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.1" />
+    </filter>
+  </defs>
+  
+  <!-- Outer Frame -->
+  <rect x="4" y="20" width="56" height="24" rx="12" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" filter="url(#shadow)" />
+  
+  <!-- Progress Bar Fill -->
+  <rect x="8" y="24" width="44" height="16" rx="8" fill="url(#grad)" />
+</svg>
