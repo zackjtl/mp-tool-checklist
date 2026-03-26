@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MP Tool 版本進度</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+      padding: 32px 16px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #1a1a2e;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    /* Auth bar */
+    .auth-bar {
+      max-width: 760px;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .auth-badge {
+      font-size: 0.8rem;
+      padding: 5px 12px;
+      border-radius: 99px;
+      font-weight: 500;
+    }
+
+    .auth-badge.locked {
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+
+    .auth-badge.unlocked {
+      background: #f0fdf4;
+      color: #16a34a;
+      border: 1px solid #bbf7d0;
+    }
+
+    .auth-btn {
+      font-size: 0.8rem;
+      padding: 5px 14px;
+      border-radius: 99px;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      color: #374151;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .auth-btn:hover { background: #f9fafb; border-color: #9ca3af; }
+    .auth-btn.logout { border-color: #fca5a5; color: #ef4444; }
+    .auth-btn.logout:hover { background: #fef2f2; }
+
+    /* Password modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px 28px 24px;
+      width: 320px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+    }
+
+    .modal h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #1a1a2e;
+    }
+
+    .modal p {
+      font-size: 0.82rem;
+      color: #666;
+      margin-bottom: 16px;
+    }
+
+    .modal input[type="password"] {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      margin-bottom: 8px;
+      transition: border-color 0.15s;
+    }
+    .modal input[type="password"]:focus { border-color: #4b5563; }
+    .modal input[type="password"].error { border-color: #ef4444; }
+
+    .modal-error {
+      font-size: 0.78rem;
+      color: #ef4444;
+      min-height: 18px;
+      margin-bottom: 12px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .modal-actions button {
+      padding: 7px 18px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: background 0.15s;
+    }
+
+    .btn-cancel {
+      background: #f1f5f9;
+      color: #475569;
+      border-color: #e2e8f0;
+    }
+    .btn-cancel:hover { background: #e2e8f0; }
+
+    .btn-confirm {
+      background: #1a1a2e;
+      color: #fff;
+    }
+    .btn-confirm:hover { background: #2d2d4e; }
+
+    /* Progress */
+    .progress-bar-wrap {
+      max-width: 760px;
+      margin: 0 auto 24px;
+      background: #dde1e7;
+      border-radius: 99px;
+      height: 10px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4ade80, #22c55e);
+      border-radius: 99px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+
+    .progress-label {
+      text-align: center;
+      font-size: 0.82rem;
+      color: #555;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      max-width: 760px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead tr {
+      background: #1a1a2e;
+      color: #fff;
+    }
+
+    thead th {
+      padding: 14px 16px;
+      text-align: left;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    thead th:last-child {
+      text-align: center;
+      width: 120px;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid #f0f2f5;
+      transition: background 0.15s;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #f8f9fb; }
+
+    tbody tr.done { background: #f0fdf4; }
+    tbody tr.done:hover { background: #e8faf0; }
+
+    tbody tr.in-progress { background: #fff7ed; }
+    tbody tr.in-progress:hover { background: #ffedd5; }
+
+    td {
+      padding: 13px 16px;
+      font-size: 0.9rem;
+      vertical-align: middle;
+    }
+
+    td.tool-version { font-weight: 600; color: #1a1a2e; }
+    tbody tr.done td.tool-version {
+      color: #16a34a;
+      text-decoration: line-through;
+      text-decoration-color: #86efac;
+    }
+    tbody tr.in-progress td.tool-version { color: #c2410c; }
+
+    td.branch {
+      color: #555;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.82rem;
+    }
+    td.obsolete { color: #ef4444; font-size: 0.85rem; }
+
+    .branch-input {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.82rem;
+      color: #1a1a2e;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 4px 8px;
+      width: 100%;
+      background: #f8fafc;
+      transition: border-color 0.15s, background 0.15s;
+      outline: none;
+    }
+    .branch-input:focus {
+      border-color: #4b5563;
+      background: #fff;
+    }
+    .branch-input.saving { opacity: 0.5; }
+
+    td.status-cell { text-align: center; }
+
+    .status-select {
+      appearance: none;
+      -webkit-appearance: none;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      padding: 5px 28px 5px 10px;
+      font-size: 0.82rem;
+      font-family: inherit;
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 8px center;
+      cursor: pointer;
+      color: #1a1a2e;
+      transition: border-color 0.15s, opacity 0.15s;
+      min-width: 90px;
+    }
+    .status-select:hover { border-color: #6b7280; }
+    .status-select:focus { outline: none; border-color: #4b5563; }
+    .status-select.loading { opacity: 0.4; pointer-events: none; }
+    .status-select[data-status="未完成"] { border-color: #d1d5db; color: #6b7280; }
+    .status-select[data-status="進行中"] { border-color: #f97316; color: #c2410c; background-color: #fff7ed; }
+    .status-select[data-status="已完成"] { border-color: #22c55e; color: #16a34a; background-color: #f0fdf4; }
+
+    /* Read-only badge */
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 99px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      min-width: 64px;
+      text-align: center;
+    }
+    .status-badge.未完成 { background: #f1f5f9; color: #64748b; }
+    .status-badge.進行中 { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+    .status-badge.已完成 { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+
+    .status-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: #1a1a2e;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 99px;
+      font-size: 0.85rem;
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 999;
+    }
+    .status-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .spinner {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 560px) {
+      td, th { padding: 11px 10px; }
+      td.branch { display: none; }
+      thead th:nth-child(2) { display: none; }
+      .status-select { min-width: 78px; font-size: 0.78rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>MP Tool 版本進度</h1>
+
+
+  <div class="auth-bar">
+    <span class="auth-badge locked" id="authBadge">🔒 瀏覽模式</span>
+    <button class="auth-btn" id="authBtn" onclick="handleAuthBtn()">解鎖編輯</button>
+  </div>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progressFill"></div>
+  </div>
+  <p class="progress-label" id="progressLabel">載入中...</p>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>MP Tool 版本</th>
+          <th>Branch</th>
+          <th>狀態</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <tr><td colspan="3" class="spinner">載入資料中...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="status-toast" id="toast"></div>
+
+  <!-- Password Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <h2>輸入編輯密碼</h2>
+      <p>請輸入密碼以解鎖編輯功能</p>
+      <input type="password" id="pwInput" placeholder="密碼" onkeydown="if(event.key==='Enter') submitPw()" />
+      <div class="modal-error" id="pwError"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">取消</button>
+        <button class="btn-confirm" onclick="submitPw()">確認</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://iotjuquhpqctgsnetmnc.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlvdGp1cXVocHFjdGdzbmV0bW5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMjE0MjksImV4cCI6MjA4OTg5NzQyOX0.lRgfA3WeNodUKFbjCGeda-YqYwNZTNiKhV3MC-3XyC0';
+    const EDIT_PASSWORD = '0x20071102';
+
+    const headers = {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    };
+
+    const STATUSES = ['未完成', '進行中', '已完成'];
+    let data = [];
+    let isUnlocked = sessionStorage.getItem('mp_unlocked') === '1';
+
+    // --- Auth ---
+    function handleAuthBtn() {
+      if (isUnlocked) {
+        isUnlocked = false;
+        sessionStorage.removeItem('mp_unlocked');
+        updateAuthUI();
+        renderTable();
+      } else {
+        openModal();
+      }
+    }
+
+    function openModal() {
+      document.getElementById('pwInput').value = '';
+      document.getElementById('pwError').textContent = '';
+      document.getElementById('pwInput').classList.remove('error');
+      document.getElementById('modalOverlay').classList.add('show');
+      setTimeout(() => document.getElementById('pwInput').focus(), 100);
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('show');
+    }
+
+    function submitPw() {
+      const val = document.getElementById('pwInput').value;
+      if (val === EDIT_PASSWORD) {
+        isUnlocked = true;
+        sessionStorage.setItem('mp_unlocked', '1');
+        closeModal();
+        updateAuthUI();
+        renderTable();
+        showToast('🔓 已解鎖編輯');
+      } else {
+        document.getElementById('pwError').textContent = '密碼錯誤，請重試';
+        document.getElementById('pwInput').classList.add('error');
+        document.getElementById('pwInput').value = '';
+        document.getElementById('pwInput').focus();
+      }
+    }
+
+    function updateAuthUI() {
+      const badge = document.getElementById('authBadge');
+      const btn = document.getElementById('authBtn');
+      if (isUnlocked) {
+        badge.textContent = '🔓 編輯模式';
+        badge.className = 'auth-badge unlocked';
+        btn.textContent = '鎖定';
+        btn.className = 'auth-btn logout';
+      } else {
+        badge.textContent = '🔒 瀏覽模式';
+        badge.className = 'auth-badge locked';
+        btn.textContent = '解鎖編輯';
+        btn.className = 'auth-btn';
+      }
+    }
+
+    // Close modal on overlay click
+    document.getElementById('modalOverlay').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    // --- Data ---
+    async function loadData() {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/mp_tool_checklist?order=id.asc`, { headers });
+      data = await res.json();
+      renderTable();
+      updateProgress();
+    }
+
+    function rowClass(status) {
+      if (status === '已完成') return 'done';
+      if (status === '進行中') return 'in-progress';
+      return '';
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        const cls = rowClass(row.status);
+        if (cls) tr.classList.add(cls);
+
+        const isObsolete = row.branch === '過舊/不可考';
+
+        let statusCell;
+        let branchCell;
+        if (isUnlocked) {
+          const options = STATUSES.map(s =>
+            `<option value="${s}" ${row.status === s ? 'selected' : ''}>${s}</option>`
+          ).join('');
+          statusCell = `<select class="status-select" data-id="${row.id}" data-status="${row.status}" onchange="changeStatus(${row.id}, this)">${options}</select>`;
+          branchCell = `<td class="branch"><input class="branch-input" type="text" value="${escAttr(row.branch || '')}" data-id="${row.id}" data-orig="${escAttr(row.branch || '')}" onblur="saveBranch(${row.id}, this)" onkeydown="if(event.key==='Enter') this.blur()" /></td>`;
+        } else {
+          statusCell = `<span class="status-badge ${row.status}">${row.status}</span>`;
+          branchCell = `<td class="branch ${isObsolete ? 'obsolete' : ''}">${escHtml(row.branch || '')}</td>`;
+        }
+
+        tr.innerHTML = `
+          <td class="tool-version">${escHtml(row.tool_version)}</td>
+          ${branchCell}
+          <td class="status-cell">${statusCell}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function changeStatus(id, select) {
+      const newStatus = select.value;
+      select.classList.add('loading');
+      select.dataset.status = newStatus;
+
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/mp_tool_checklist?id=eq.${id}`,
+        {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify({
+            status: newStatus,
+            checked: newStatus === '已完成',
+            updated_at: new Date().toISOString()
+          })
+        }
+      );
+
+      if (res.ok) {
+        const row = data.find(r => r.id === id);
+        row.status = newStatus;
+        row.checked = newStatus === '已完成';
+
+        const tr = select.closest('tr');
+        tr.className = '';
+        const cls = rowClass(newStatus);
+        if (cls) tr.classList.add(cls);
+
+        const toastMap = { '已完成': '✓ 已標記完成', '進行中': '⏳ 進行中', '未完成': '已重設為未完成' };
+        showToast(toastMap[newStatus]);
+        updateProgress();
+      } else {
+        showToast('⚠️ 儲存失敗，請重試');
+        const row = data.find(r => r.id === id);
+        select.value = row.status;
+        select.dataset.status = row.status;
+      }
+
+      select.classList.remove('loading');
+    }
+
+    function updateProgress() {
+      const total = data.length;
+      const done = data.filter(r => r.status === '已完成').length;
+      const inProg = data.filter(r => r.status === '進行中').length;
+      const pct = total ? Math.round((done / total) * 100) : 0;
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressLabel').textContent =
+        `已完成 ${done} / ${total}（${pct}%）` + (inProg > 0 ? `　進行中 ${inProg}` : '');
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    async function saveBranch(id, input) {
+      const newVal = input.value.trim();
+      const orig = input.dataset.orig;
+      if (newVal === orig) return;
+      input.classList.add('saving');
+
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/mp_tool_checklist?id=eq.${id}`,
+        {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify({ branch: newVal, updated_at: new Date().toISOString() })
+        }
+      );
+
+      if (res.ok) {
+        const row = data.find(r => r.id === id);
+        row.branch = newVal;
+        input.dataset.orig = newVal;
+        showToast('Branch 已儲存');
+      } else {
+        input.value = orig;
+        showToast('⚠️ 儲存失敗，請重試');
+      }
+      input.classList.remove('saving');
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function escAttr(s) {
+      return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    updateAuthUI();
+    loadData();
+  </script>
+</body>
+</html>
