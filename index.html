@@ -287,6 +287,17 @@
       window.history.replaceState({}, '', window.location.pathname + window.location.search);
     }
 
+    /**
+     * implicit／清理 token 後，網址常殘留僅「#」或「#/」，會讓 detectSessionInUrl 與後續請求卡住，
+     * 登出後首頁公開列表會一直「載入中」直到 F5；改為清成乾淨路徑。
+     */
+    function clearStrayEmptyHash() {
+      const h = window.location.hash;
+      if (h && /^#(\/?)?$/.test(h)) {
+        window.history.replaceState({}, '', window.location.pathname + window.location.search);
+      }
+    }
+
     const STATUSES = ['未完成', '進行中', '已完成'];
     let session = null;
     let renderGeneration = 0;
@@ -372,7 +383,7 @@
       const u = new URL(window.location.href);
       u.searchParams.delete('code');
       u.searchParams.delete('state');
-      window.history.replaceState({}, '', u.pathname + u.search + u.hash);
+      window.history.replaceState({}, '', u.pathname + u.search);
     }
 
     // Initialize app correctly to avoid deadlocks & guarantee startup
@@ -382,6 +393,7 @@
           await supabase.auth.initialize();
         }
         await exchangePkceCodeIfPresent();
+        clearStrayEmptyHash();
         let {
           data: { session: _session },
         } = await supabase.auth.getSession();
@@ -437,6 +449,7 @@
 
     async function renderApp() {
       const gen = ++renderGeneration;
+      clearStrayEmptyHash();
       if (listId) {
         showView('view-list');
         await loadChecklistDetail();
@@ -492,6 +505,7 @@
     async function loadLandingPublicLists(gen) {
       const grid = document.getElementById('landingPublicList');
       if (!grid) return;
+      clearStrayEmptyHash();
       try {
         const { data: publicLists, error } = await supabase
           .from('checklists')
