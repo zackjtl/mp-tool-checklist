@@ -319,19 +319,48 @@
 
     window.signOut = async () => { await supabase.auth.signOut(); };
 
-    // Initialize app correctly to avoid deadlocks & guarantee startup
-    supabase.auth.getSession().then(({ data: { session: _session } }) => {
-      session = _session;
-      updateAuthUI();
-      renderApp().catch(e => alert("系統錯誤: " + e.message));
+    /** PKCE：Google 導回 ?code= 時必須先換票；若先 getSession 可能 session 仍為 null，畫面會停在首頁且網址留著 code */
+    async function exchangePkceCodeIfPresent() {
+      const code = new URLSearchParams(window.location.search).get('code');
+      if (!code) return;
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      if (error) {
+        const benign = /invalid|expired|already|not valid|verifier|grant/i.test(error.message);
+        if (!benign) {
+          alert(
+            '登入失敗：' +
+              error.message +
+              '\n\n若曾用多個分頁操作，請關閉多餘分頁後再試；須在「按下 Google 登入的同一個瀏覽器環境」完成選帳戶。'
+          );
+        }
+      }
+      const u = new URL(window.location.href);
+      u.searchParams.delete('code');
+      u.searchParams.delete('state');
+      window.history.replaceState({}, '', u.pathname + u.search + u.hash);
+    }
 
-      // 不可略過 INITIAL_SESSION：OAuth 回傳後有時只有此事件帶 session，略過會導致「閃一下仍像未登入」
-      supabase.auth.onAuthStateChange(async (event, _session2) => {
-        session = _session2;
+    // Initialize app correctly to avoid deadlocks & guarantee startup
+    (async function initAuth() {
+      try {
+        await exchangePkceCodeIfPresent();
+        const {
+          data: { session: _session },
+        } = await supabase.auth.getSession();
+        session = _session;
         updateAuthUI();
         await renderApp().catch((e) => alert('系統錯誤: ' + e.message));
-      });
-    });
+
+        // 不可略過 INITIAL_SESSION：OAuth 回傳後有時只有此事件帶 session，略過會導致「閃一下仍像未登入」
+        supabase.auth.onAuthStateChange(async (event, _session2) => {
+          session = _session2;
+          updateAuthUI();
+          await renderApp().catch((e) => alert('系統錯誤: ' + e.message));
+        });
+      } catch (e) {
+        alert('系統錯誤: ' + (e && e.message ? e.message : e));
+      }
+    })();
 
     function updateAuthUI() {
       const authBar = document.getElementById('authBar');
