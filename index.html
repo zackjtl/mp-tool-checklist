@@ -216,7 +216,8 @@
     .detail-tool-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; padding: 0; border: none; background: transparent; color: #475569; cursor: pointer; border-radius: 8px; transition: background 0.15s, color 0.15s; }
     .detail-tool-icon:hover { background: #f1f5f9; color: #0f172a; }
     .detail-tool-icon svg { display: block; }
-    .detail-tool-icon[data-tooltip]:hover::after { content: attr(data-tooltip); position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); padding: 6px 10px; background: #0f172a; color: #fff; font-size: 0.72rem; font-weight: 500; white-space: nowrap; border-radius: 6px; z-index: 20; pointer-events: none; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15); }
+    /* 提示在圖示下方：頂列 icon 若往上會被裁切 */
+    .detail-tool-icon[data-tooltip]:hover::after { content: attr(data-tooltip); position: absolute; top: calc(100% + 8px); bottom: auto; left: 50%; transform: translateX(-50%); padding: 6px 10px; background: #0f172a; color: #fff; font-size: 0.72rem; font-weight: 500; white-space: nowrap; border-radius: 6px; z-index: 50; pointer-events: none; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15); }
     .detail-tool-icon--danger { color: #94a3b8; }
     .detail-tool-icon--danger:hover { background: #fef2f2 !important; color: #dc2626 !important; }
     
