@@ -409,14 +409,19 @@
         updateAuthUI();
         await renderApp().catch((e) => alert('系統錯誤: ' + e.message));
 
-        // 不可略過 INITIAL_SESSION：OAuth 回傳後有時只有此事件帶 session，略過會導致「閃一下仍像未登入」
-        supabase.auth.onAuthStateChange(async (event, _session2) => {
-          session = _session2;
-          if (session && /access_token=/.test(window.location.hash)) {
-            stripAuthHashFromUrlIfNeeded();
-          }
-          updateAuthUI();
-          await renderApp().catch((e) => alert('系統錯誤: ' + e.message));
+        // 不可略過 INITIAL_SESSION；登出時常連續觸發多個事件，若每次都 renderApp 會讓 renderGeneration 蓋掉上一輪，
+        // loadLandingPublicLists 在 await 後發現 gen 已過期 → 不寫入 DOM，畫面永遠停在載入中（Network 仍全是 200）
+        let authStateDebounceTimer = null;
+        supabase.auth.onAuthStateChange((event, _session2) => {
+          clearTimeout(authStateDebounceTimer);
+          authStateDebounceTimer = setTimeout(async () => {
+            session = _session2;
+            if (session && /access_token=/.test(window.location.hash)) {
+              stripAuthHashFromUrlIfNeeded();
+            }
+            updateAuthUI();
+            await renderApp().catch((e) => alert('系統錯誤: ' + e.message));
+          }, 60);
         });
       } catch (e) {
         alert('系統錯誤: ' + (e && e.message ? e.message : e));
