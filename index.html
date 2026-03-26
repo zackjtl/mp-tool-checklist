@@ -260,6 +260,7 @@
 
     const STATUSES = ['未完成', '進行中', '已完成'];
     let session = null;
+    let renderGeneration = 0;
     let data = [];
     let currentChecklist = null; 
     let isOwner = false;
@@ -320,17 +321,18 @@
     }
 
     async function renderApp() {
+      const gen = ++renderGeneration;
       if (listId) {
         showView('view-list');
         await loadChecklistDetail();
+      } else if (session) {
+        showView('view-dashboard');
+        await loadDashboard(gen);
       } else {
-        if (session) {
-          showView('view-dashboard');
-          await loadDashboard();
-        } else {
-          showView('view-login');
-          await loadLandingPublicLists();
-        }
+        showView('view-login');
+        // 登出後立刻查詢有時會與 Supabase 內部 session 清理競爭；延到下一個 macrotask 再載入
+        await new Promise((r) => setTimeout(r, 0));
+        await loadLandingPublicLists(gen);
       }
     }
 
@@ -372,7 +374,9 @@
     }
 
     // --- Landing View ---
-    async function loadLandingPublicLists() {
+    async function loadLandingPublicLists(gen) {
+      const grid = document.getElementById('landingPublicList');
+      if (!grid) return;
       try {
         const { data: publicLists, error } = await supabase
           .from('checklists')
@@ -380,24 +384,29 @@
           .eq('is_public', true)
           .order('created_at', { ascending: false });
 
-        const grid = document.getElementById('landingPublicList');
+        if (gen !== renderGeneration) return;
         if (error || !publicLists || publicLists.length === 0) {
           grid.innerHTML = '<div class="empty-state">目前還沒有公開的表單哦！(或發生錯誤: ' + (error?.message || '') + ')</div>';
           return;
         }
-        grid.innerHTML = publicLists.map(list => buildCardHTML(list, false)).join('');
+        grid.innerHTML = publicLists.map((list) => buildCardHTML(list, false)).join('');
       } catch (err) {
-        console.error("loadLandingPublicLists Error:", err);
+        console.error('loadLandingPublicLists Error:', err);
+        if (gen !== renderGeneration) return;
+        grid.innerHTML =
+          '<div class="empty-state">載入公開表單失敗：' + escHtml(err.message || String(err)) + '</div>';
       }
     }
 
     // --- Dashboard View --- 
-    async function loadDashboard() {
+    async function loadDashboard(gen) {
       try {
         // Load My Lists
         const { data: myLists, error: e1 } = await supabase.from('checklists').select('*, mp_tool_checklist(status), profiles(nickname, email)')
           .eq('user_id', session.user.id).order('created_at', { ascending: false });
-        
+
+        if (gen !== renderGeneration) return;
+
         const myGrid = document.getElementById('dashboardMyList');
         if (!myLists || myLists.length === 0 || e1) {
           myGrid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">尚無表單，點擊上方按鈕建立！' + (e1 ? '(錯誤: '+e1.message+')' : '') + '</div>';
@@ -408,6 +417,8 @@
       // Load Others Public Lists
       const { data: publicLists, error: e2 } = await supabase.from('checklists').select('*, mp_tool_checklist(status), profiles(nickname, email)')
         .eq('is_public', true).neq('user_id', session.user.id).order('created_at', { ascending: false });
+
+        if (gen !== renderGeneration) return;
 
       const pubGrid = document.getElementById('dashboardPublicList');
       if (!publicLists || publicLists.length === 0 || e2) {
@@ -427,7 +438,8 @@
       if (error) alert('設定暱稱失敗: ' + error.message);
       else {
         showToast('✨ 暱稱已成功更新！');
-        await loadDashboard();
+        const g = ++renderGeneration;
+        await loadDashboard(g);
       }
     };
 
