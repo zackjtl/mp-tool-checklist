@@ -258,11 +258,18 @@
       }
     const SUPABASE_URL = 'https://iotjuquhpqctgsnetmnc.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlvdGp1cXVocHFjdGdzbmV0bW5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMjE0MjksImV4cCI6MjA4OTg5NzQyOX0.lRgfA3WeNodUKFbjCGeda-YqYwNZTNiKhV3MC-3XyC0';
+    // 停用 Navigator Locks：避免 getSession / onAuthStateChange / OAuth 同時競爭時出現
+    // "Lock ... was released because another request stole it"（單頁應用可接受）
+    async function authLockNoOp(_name, _acquireTimeout, fn) {
+      return await fn();
+    }
+
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
       auth: {
         flowType: 'pkce',
         detectSessionInUrl: true,
         persistSession: true,
+        lock: authLockNoOp,
       },
     });
 
