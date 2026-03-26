@@ -6,15 +6,24 @@ const PORT = process.env.PORT || 3000;
 
 const rootDir = path.join(__dirname);
 
-// 自動提供靜態檔案；避免 CDN／瀏覽器長快取 HTML／SVG，否則佈署後仍像舊版
+/** 避免 HTML 被 CDN／瀏覽器用 ETag/304 沿用舊內容（曾出現 Last-Modified 異常仍回 304） */
+function setNoStoreHtmlHeaders(res) {
+  res.setHeader('Cache-Control', 'private, no-store, no-cache, must-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('CDN-Cache-Control', 'no-store');
+  res.setHeader('Vercel-CDN-Cache-Control', 'no-store');
+}
+
+// 自動提供靜態檔案；HTML 關閉 etag/lastModified，避免 304 仍顯示舊版
 app.use(
   express.static(rootDir, {
-    etag: true,
+    etag: false,
+    lastModified: false,
     maxAge: 0,
     setHeaders(res, filePath) {
-      const base = path.basename(filePath);
-      if (base === 'index.html' || filePath.endsWith('.html')) {
-        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      if (filePath.endsWith('.html')) {
+        setNoStoreHtmlHeaders(res);
       } else if (filePath.endsWith('.svg')) {
         res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
       }
@@ -24,8 +33,8 @@ app.use(
 
 // 捕捉所有路由並導向 index.html (以利前端處理路徑與網址參數)
 app.get('*', (req, res) => {
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-  res.sendFile(path.join(rootDir, 'index.html'));
+  setNoStoreHtmlHeaders(res);
+  res.sendFile(path.join(rootDir, 'index.html'), { etag: false, lastModified: false });
 });
 
 // 當跑在 Vercel 上的時候，它會以外部函式方式引入 app
