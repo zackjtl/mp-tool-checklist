@@ -13,13 +13,90 @@
     h1 { text-align: center; font-size: 1.6rem; font-weight: 700; margin-bottom: 6px; color: #0f172a; }
     .subtitle { text-align: center; font-size: 0.85rem; color: #64748b; margin-bottom: 24px; }
 
-    /* Auth bar */
-    .auth-bar { max-width: 1180px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; padding: 0 8px; }
-    .auth-badge { font-size: 0.78rem; padding: 4px 10px; border-radius: 99px; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; border: 1px solid transparent; }
-    .auth-badge.locked { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
-    .auth-badge.unlocked { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
-    .auth-badge.user-email { background: #eff6ff; color: #4f46e5; border-color: #c7d2fe; }
-
+    /* Auth bar：儀表板與首頁相同 — Logo 全寬置中、右側按鈕 absolute；進度表詳情用 .auth-bar-hero--list：左回首頁、中置中 Logo（較小）、右頭像與登出 */
+    .auth-bar { max-width: 1180px; margin: 0 auto 20px; padding: 0 8px; box-sizing: border-box; }
+    .auth-bar:has(.auth-bar-hero--list) { margin-bottom: 12px; }
+    .auth-bar-hero { margin-bottom: 0; position: relative; min-height: 48px; box-sizing: border-box; }
+    .auth-bar-left { display: none; flex-shrink: 0; align-items: center; }
+    .auth-bar-logo-wrap { text-align: center; width: 100%; }
+    .auth-bar-logo-img { max-height: 120px; object-fit: contain; width: auto; vertical-align: middle; }
+    .auth-bar-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; position: absolute; top: 0; right: 0; z-index: 2; }
+    .auth-bar-actions .btn:not(#btnSignOut) { box-shadow: 0 2px 10px rgba(15, 23, 42, 0.12); }
+    /* 進度表詳情：三欄 flex；頂列較矮；右側順序為 操作鈕列 → 頭像 → 登出 */
+    .auth-bar-hero--list { display: flex; align-items: center; gap: 8px; min-height: 36px; }
+    .auth-bar-hero--list .auth-bar-left { display: inline-flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+    /* 回首頁：純文字連結感，無框線、無底色 */
+    #homeBtn {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 4px 2px;
+      font-size: 0.88rem;
+      color: #64748b;
+      border-radius: 0;
+    }
+    #homeBtn:hover {
+      color: #0f172a;
+      text-decoration: underline;
+    }
+    #homeBtn .home-btn-arrow {
+      font-size: 1.45em;
+      font-weight: 600;
+      line-height: 1;
+      display: inline-block;
+      margin-inline-end: 2px;
+      vertical-align: -0.08em;
+    }
+    .auth-bar-hero--list .auth-bar-logo-wrap { flex: 1 1 auto; width: auto; min-width: 0; text-align: center; }
+    .auth-bar-hero--list .auth-bar-logo-img { max-height: 52px; }
+    .auth-bar-hero--list .auth-bar-actions { position: static; flex-shrink: 0; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    /* 進度表詳情：操作鈕與頭像同列，與頭像保留間距 */
+    .auth-bar-list-tools {
+      display: none;
+      align-items: center;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-inline-end: 16px;
+      max-width: calc(100vw - 200px);
+    }
+    @media (min-width: 641px) {
+      .auth-bar-list-tools { margin-inline-end: 24px; max-width: none; }
+    }
+    .auth-bar-list-tools .btn.primary {
+      padding: 5px 10px;
+      font-size: 0.78rem;
+      box-shadow: none !important;
+    }
+    .auth-bar-hero--list .auth-bar-list-tools .detail-tool-icon {
+      width: 34px;
+      height: 34px;
+    }
+    .auth-bar-hero--list .auth-avatar-wrap { width: 32px; height: 32px; box-shadow: 0 1px 6px rgba(15, 23, 42, 0.08); border-width: 1px; }
+    .auth-bar-hero--list #btnSignOut { padding: 4px 10px; font-size: 0.75rem; }
+    .auth-bar-hero--list.auth-bar-hero--list-no-logo { justify-content: space-between; min-height: 34px; }
+    .auth-bar-hero--list-no-logo .auth-bar-logo-wrap { display: none !important; }
+    /* 登出：透明底、灰字灰框、小圓角、無陰影 */
+    #btnSignOut {
+      background: transparent !important;
+      box-shadow: none !important;
+      border: 1px solid #cbd5e1;
+      color: #64748b;
+      border-radius: 6px;
+    }
+    #btnSignOut:hover { background: #f1f5f9 !important; border-color: #94a3b8; color: #475569; }
+    .auth-avatar-wrap {
+      width: 40px; height: 40px; padding: 0; border: none; background: #f1f5f9; cursor: default;
+      border-radius: 50%; overflow: hidden; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.1); border: 2px solid #fff;
+    }
+    .auth-avatar-wrap img.auth-avatar { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .auth-avatar-wrap img.auth-avatar[hidden] { display: none !important; }
+    .auth-avatar-placeholder {
+      width: 100%; height: 100%; display: none; align-items: center; justify-content: center;
+      background: linear-gradient(145deg, #e2e8f0, #cbd5e1); color: #475569; font-size: 1rem; font-weight: 700;
+    }
+    .auth-avatar-placeholder.is-visible { display: flex; }
+    .auth-avatar-placeholder svg { width: 22px; height: 22px; opacity: 0.85; }
     .btn { font-size: 0.8rem; padding: 6px 14px; border-radius: 99px; border: 1px solid #cbd5e1; background: #fff; cursor: pointer; font-family: inherit; color: #334155; transition: 0.15s; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
     .btn:hover { background: #f8fafc; border-color: #94a3b8; }
     .btn.primary { background: #0f172a; color: #fff; border-color: #0f172a; }
@@ -46,6 +123,8 @@
     @keyframes loginModalIn { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
     .login-modal-close { position: absolute; top: 10px; right: 12px; z-index: 2; width: 36px; height: 36px; border: none; background: transparent; color: #94a3b8; font-size: 1.5rem; line-height: 1; cursor: pointer; border-radius: 8px; transition: 0.15s; }
     .login-modal-close:hover { background: #f1f5f9; color: #475569; }
+    .column-modal-divider { border: none; border-top: 1px solid #e2e8f0; margin: 20px 0 14px; }
+    .column-modal-fields-label { font-size: 0.78rem; font-weight: 600; color: #475569; margin: 0 0 10px; letter-spacing: 0.02em; }
     .login-container { width: 100%; max-width: 100%; background: #fff; border-radius: 16px; padding: 24px; padding-top: 40px; box-shadow: 0 2px 14px rgba(0,0,0,0.03); border: 1px solid #f1f5f9; text-align: center; }
     .login-container h2 { margin-bottom: 16px; font-size: 1.05rem; font-weight: 600; }
     .login-input { width: 100%; padding: 8px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; margin-bottom: 12px; outline: none; transition: 0.15s; }
@@ -96,20 +175,31 @@
     .card-progress-fill { height: 100%; background: linear-gradient(90deg, #34d399, #16a34a); border-radius: 99px; transition: width 0.4s ease; width: 0%; }
     .card-progress-text { font-size: 0.72rem; color: #64748b; font-weight: 500; }
 
-    /* Detail View：標題獨立一列真正置中；下一列工具列左公開、右為新增項目＋圖示；進度條獨立 */
+    /* Detail View：標題全寬置中（操作鈕已移至頂部 auth-bar） */
     #view-list { position: relative; }
     .detail-header { margin-bottom: 10px; }
-    .detail-title-only { width: 100%; margin-bottom: 2px; }
-    .detail-title-only h1 { margin: 0; text-align: center; font-size: 1.6rem; font-weight: 700; line-height: 1.3; }
+    .detail-title-toolbar-wrap {
+      position: relative;
+      width: 100%;
+      min-height: auto;
+      margin-bottom: 4px;
+      box-sizing: border-box;
+    }
+    .detail-title-toolbar-wrap .detail-title-only {
+      width: 100%;
+      margin: 0;
+      padding: 0 8px;
+      box-sizing: border-box;
+    }
+    .detail-title-toolbar-wrap .detail-title-only h1 {
+      margin: 0;
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
     .detail-header .subtitle { margin-bottom: 0; }
     .detail-subtitle { text-align: center; margin-top: 2px; margin-bottom: 8px; }
-    .detail-toolbar-row { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 12px; flex-wrap: wrap; min-height: 44px; margin-bottom: 4px; }
-    .detail-toolbar-left { display: flex; align-items: center; flex-shrink: 0; }
-    .detail-toolbar-right { display: flex; gap: 2px; align-items: center; flex-shrink: 0; margin-left: auto; }
-    .detail-toolbar-right #btnAddNewRow { margin-inline-end: 8px; }
-    .detail-toolbar-row--guest .detail-toolbar-left { display: none; }
-    .detail-toolbar-row--guest { justify-content: flex-end; }
-    .detail-toolbar-row--guest .detail-toolbar-right { margin-left: 0; }
     .detail-progress-block { width: 100%; max-width: 100%; margin-bottom: 12px; }
     .detail-progress-block .progress-bar-wrap { max-width: 100%; }
     .detail-progress-block .progress-label { text-align: center; }
@@ -184,26 +274,42 @@
     .empty-state { text-align: center; padding: 40px 20px; color: #64748b; width: 100%; border: 1px dashed #cbd5e1; border-radius: 10px; font-size: 0.9rem; }
     
     @media (max-width: 900px) {
-      .landing-hero-narrow { padding-top: 44px; }
+      .landing-hero-narrow, .auth-bar-hero:not(.auth-bar-hero--list) { padding-top: 44px; }
       .landing-login-trigger { top: 0; right: 0; }
     }
     @media (max-width: 640px) {
       td, th { padding: 10px 8px; }
       thead th.col-mobile-hide, td.col-mobile-hide { display: none; }
-      .detail-toolbar-row { flex-direction: column; align-items: stretch; }
-      .detail-toolbar-left { justify-content: flex-start; }
-      .detail-toolbar-right { margin-left: 0; justify-content: flex-end; width: 100%; }
+      .auth-bar-list-tools { max-width: 100%; margin-inline-end: 12px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Top Auth Bar -->
+  <!-- Top Auth Bar（已登入／訪客看列表時）：與首頁同排 — Logo 置中、右側浮動操作 -->
   <div class="auth-bar" id="authBar" style="display: none;">
-    <a href="?" class="btn" id="homeBtn" style="margin-right: auto;">← 回首頁</a>
-    <span class="auth-badge user-email" id="userEmailBadge"></span>
-    <span class="auth-badge locked" id="authBadge" style="display:none;"></span>
-    <button class="btn danger" onclick="signOut()">登出</button>
+    <div class="landing-hero-narrow auth-bar-hero" id="authBarHero">
+      <div class="auth-bar-left" id="authBarLeft">
+        <a href="?" class="btn" id="homeBtn" style="display: none;"><span class="home-btn-arrow" aria-hidden="true">←</span> 回首頁</a>
+        <button type="button" id="btnTogglePublic" onclick="togglePublicStatus()" style="display:none;" aria-live="polite"></button>
+      </div>
+      <div class="auth-bar-logo-wrap">
+        <img src="./logo.svg" class="auth-bar-logo-img" alt="ProgressBar Logo" />
+      </div>
+      <div class="auth-bar-actions">
+        <div class="auth-bar-list-tools" id="authBarListTools" style="display:none;" aria-label="進度表操作">
+          <button type="button" class="btn primary" id="btnAddNewRow" onclick="addNewRow()" style="display:none;">+ 新增項目</button>
+          <button type="button" class="detail-tool-icon" id="btnCopyShareLink" onclick="copyShareLink()" data-tooltip="複製分享連結" title="複製分享連結" aria-label="複製分享連結"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg></button>
+          <button type="button" class="detail-tool-icon" id="btnManageColumns" onclick="openColumnModal()" style="display:none;" data-tooltip="編輯欄位" title="編輯欄位" aria-label="編輯欄位"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+          <button type="button" class="detail-tool-icon detail-tool-icon--danger" id="btnDeleteChecklist" onclick="deleteCurrentChecklist()" style="display:none;" data-tooltip="刪除進度表" title="刪除進度表" aria-label="刪除進度表"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+        </div>
+        <button type="button" class="auth-avatar-wrap" id="userAvatarBtn" title="" aria-label="使用者">
+          <img class="auth-avatar" id="userAvatarImg" alt="" width="40" height="40" decoding="async" hidden />
+          <span class="auth-avatar-placeholder" id="userAvatarPlaceholder" aria-hidden="true"></span>
+        </button>
+        <button type="button" class="btn danger" onclick="signOut()" id="btnSignOut">登出</button>
+      </div>
+    </div>
   </div>
 
   <!-- Landing / Login View -->
@@ -245,12 +351,8 @@
     </div>
   </div>
 
-  <!-- Dashboard View (Logged in) -->
-  <div id="view-dashboard" class="view max-w">
-    <div style="text-align: center; margin-bottom: 24px;">
-      <img src="./logo.svg" alt="ProgressBar Logo" style="max-height: 80px; object-fit: contain; width: auto;" />
-    </div>
-    <p class="subtitle" style="margin-bottom: 24px;">管理您的專案與進度</p>
+  <!-- Dashboard View (Logged in)：Logo 在頂部 authBar，此區與首頁同寬 -->
+  <div id="view-dashboard" class="view max-w-landing">
 
     <!-- My Checklists -->
     <div class="dashboard-section">
@@ -280,21 +382,12 @@
   <!-- List Detail View -->
   <div id="view-list" class="view max-w">
     <div class="detail-header">
-      <div class="detail-title-only">
-        <h1 id="listTitle">載入中...</h1>
+      <div class="detail-title-toolbar-wrap">
+        <div class="detail-title-only">
+          <h1 id="listTitle">載入中...</h1>
+        </div>
       </div>
       <p class="subtitle detail-subtitle" id="listOwnerDate"></p>
-      <div class="detail-toolbar-row" id="detailToolbarRow">
-        <div class="detail-toolbar-left">
-          <button type="button" id="btnTogglePublic" onclick="togglePublicStatus()" style="display:none;" aria-live="polite"></button>
-        </div>
-        <div class="detail-toolbar-right">
-          <button type="button" class="btn primary" id="btnAddNewRow" onclick="addNewRow()" style="display:none;">+ 新增項目</button>
-          <button type="button" class="detail-tool-icon" id="btnCopyShareLink" onclick="copyShareLink()" data-tooltip="複製分享連結" title="複製分享連結" aria-label="複製分享連結"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg></button>
-          <button type="button" class="detail-tool-icon" id="btnManageColumns" onclick="openColumnModal()" style="display:none;" data-tooltip="編輯欄位" title="編輯欄位" aria-label="編輯欄位"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
-          <button type="button" class="detail-tool-icon detail-tool-icon--danger" id="btnDeleteChecklist" onclick="deleteCurrentChecklist()" style="display:none;" data-tooltip="刪除進度表" title="刪除進度表" aria-label="刪除進度表"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
-        </div>
-      </div>
     </div>
 
     <div class="detail-progress-block">
@@ -322,6 +415,10 @@
       <div class="login-container" style="text-align: left;">
         <h2 id="columnModalTitle">管理欄位</h2>
         <p id="columnModalHint" style="font-size: 0.78rem; color: #64748b; margin-bottom: 14px; line-height: 1.45;"></p>
+        <label for="columnModalChecklistTitle" style="display:block;font-size:0.8rem;font-weight:600;color:#334155;margin-bottom:6px;">進度表標題</label>
+        <input type="text" id="columnModalChecklistTitle" class="login-input" maxlength="200" autocomplete="off" placeholder="輸入標題" style="margin-bottom: 0;" />
+        <hr class="column-modal-divider" aria-hidden="true" />
+        <p class="column-modal-fields-label">表頭欄位</p>
         <div id="columnModalList"></div>
         <button type="button" class="btn primary" id="btnAppendColumn" style="width: 100%; margin-top: 10px;">+ 新增欄位</button>
         <button type="button" class="btn" id="btnSaveColumn" style="width: 100%; margin-top: 10px;">儲存欄位</button>
@@ -607,26 +704,76 @@
       }
     })();
 
+    const GUEST_AVATAR_SVG =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
+
     function updateAuthUI() {
       const authBar = document.getElementById('authBar');
-      const authBadge = document.getElementById('authBadge');
+      const homeBtn = document.getElementById('homeBtn');
+      const signOutBtn = document.getElementById('btnSignOut');
+      const avatarBtn = document.getElementById('userAvatarBtn');
+      const avatarImg = document.getElementById('userAvatarImg');
+      const avatarPh = document.getElementById('userAvatarPlaceholder');
+
+      function showAvatarFromSession() {
+        const email = session.user.email || '';
+        const meta = session.user.user_metadata || {};
+        const url = meta.avatar_url || meta.picture || '';
+        avatarPh.innerHTML = '';
+        avatarPh.classList.remove('is-visible');
+        avatarImg.onload = function () {
+          avatarImg.hidden = false;
+          avatarPh.classList.remove('is-visible');
+        };
+        avatarImg.onerror = function () {
+          avatarImg.hidden = true;
+          avatarPh.textContent = email ? email.charAt(0).toUpperCase() : '?';
+          avatarPh.classList.add('is-visible');
+        };
+        if (url) {
+          avatarImg.hidden = true;
+          avatarImg.src = url;
+          if (avatarImg.complete && avatarImg.naturalWidth > 0) {
+            avatarImg.hidden = false;
+            avatarPh.classList.remove('is-visible');
+          }
+        } else {
+          avatarImg.removeAttribute('src');
+          avatarImg.hidden = true;
+          avatarPh.textContent = email ? email.charAt(0).toUpperCase() : '?';
+          avatarPh.classList.add('is-visible');
+        }
+        avatarBtn.title = email || '已登入';
+        avatarBtn.setAttribute('aria-label', email ? '帳號：' + email : '使用者');
+      }
+
       if (session) {
-        authBar.style.display = 'flex';
-        document.getElementById('userEmailBadge').textContent = '👤 ' + session.user.email;
-        const hc = document.getElementById('homeBtn');
-        hc.style.display = listId ? 'inline-flex' : 'none';
-        authBadge.style.display = 'none';
+        authBar.style.display = 'block';
+        homeBtn.style.display = listId ? 'inline-flex' : 'none';
+        signOutBtn.style.display = 'inline-flex';
+        showAvatarFromSession();
       } else {
         if (listId) {
-          authBar.style.display = 'flex';
-          document.getElementById('userEmailBadge').textContent = '👤 訪客';
-          document.getElementById('homeBtn').style.display = 'inline-flex';
-          document.querySelector('#authBar .danger').style.display = 'none'; 
-          authBadge.style.display = 'none';
+          authBar.style.display = 'block';
+          homeBtn.style.display = 'inline-flex';
+          signOutBtn.style.display = 'none';
+          avatarImg.removeAttribute('src');
+          avatarImg.hidden = true;
+          avatarPh.innerHTML = GUEST_AVATAR_SVG;
+          avatarPh.classList.add('is-visible');
+          avatarBtn.title = '訪客（唯讀）';
+          avatarBtn.setAttribute('aria-label', '訪客');
         } else {
           authBar.style.display = 'none';
         }
       }
+    }
+
+    /** 進度表頁頂部不顯示 Logo（唯讀訪客／已登入皆同，避免佔位） */
+    function syncAuthBarListNoLogo() {
+      const hero = document.getElementById('authBarHero');
+      if (!hero || !listId) return;
+      hero.classList.add('auth-bar-hero--list-no-logo');
     }
 
     async function renderApp() {
@@ -653,6 +800,15 @@
         document.getElementById(id).classList.remove('active');
       });
       document.getElementById(viewId).classList.add('active');
+      const hero = document.getElementById('authBarHero');
+      if (hero) {
+        const isList = viewId === 'view-list';
+        hero.classList.toggle('auth-bar-hero--list', isList);
+        if (!isList) hero.classList.remove('auth-bar-hero--list-no-logo');
+        else syncAuthBarListNoLogo();
+      }
+      const listTools = document.getElementById('authBarListTools');
+      if (listTools) listTools.style.display = viewId === 'view-list' ? 'flex' : 'none';
     }
 
     document.getElementById('btnOpenLoginModal')?.addEventListener('click', openLoginModal);
@@ -842,10 +998,12 @@
       if (listError || !listData) {
         document.getElementById('listTitle').textContent = '⚠️ 找不到表單或無權限';
         document.getElementById('tableBody').innerHTML = '<tr><td colspan="4" class="empty-state">表單不存在</td></tr>';
+        document.getElementById('authBarHero')?.classList.remove('auth-bar-hero--list-no-logo');
         return;
       }
 
       currentChecklist = listData;
+      syncAuthBarListNoLogo();
       isOwner = session && session.user.id === currentChecklist.user_id;
 
       let titleLabel = currentChecklist.title;
@@ -856,30 +1014,22 @@
 
       document.getElementById('listTitle').textContent = titleLabel;
       const ownerName = currentChecklist.profiles?.nickname || currentChecklist.profiles?.email || '未知使用者';
-      document.getElementById('listOwnerDate').innerHTML = `建立者：<strong>${escHtml(ownerName)}</strong> &nbsp;•&nbsp; 建立於：${new Date(currentChecklist.created_at).toLocaleDateString()}`;
+      const permLabel = isOwner ? '擁有者 / 可編輯' : '唯讀';
+      document.getElementById('listOwnerDate').innerHTML = `建立者：<strong>${escHtml(ownerName)}</strong> &nbsp;•&nbsp; 建立於：${new Date(currentChecklist.created_at).toLocaleDateString()} &nbsp;•&nbsp; ${escHtml(permLabel)}`;
 
-      const authBadge = document.getElementById('authBadge');
-      authBadge.style.display = 'inline-flex';
-      const toolbarRow = document.getElementById('detailToolbarRow');
       if (isOwner) {
-        authBadge.textContent = '🔓 擁有者 / 可編輯';
-        authBadge.className = 'auth-badge unlocked';
         document.getElementById('btnAddNewRow').style.display = 'inline-flex';
         document.getElementById('btnManageColumns').style.display = 'inline-flex';
         document.getElementById('btnDeleteChecklist').style.display = 'inline-flex';
 
         const btnToggle = document.getElementById('btnTogglePublic');
         btnToggle.style.display = 'inline-flex';
-        if (toolbarRow) toolbarRow.classList.remove('detail-toolbar-row--guest');
         updateToggleBtnUI(currentChecklist.is_public);
       } else {
-        authBadge.textContent = '🔒 唯讀';
-        authBadge.className = 'auth-badge locked';
         document.getElementById('btnAddNewRow').style.display = 'none';
         document.getElementById('btnManageColumns').style.display = 'none';
         document.getElementById('btnDeleteChecklist').style.display = 'none';
         document.getElementById('btnTogglePublic').style.display = 'none';
-        if (toolbarRow) toolbarRow.classList.add('detail-toolbar-row--guest');
       }
 
       await loadItems();
@@ -898,7 +1048,7 @@
         btn.setAttribute('aria-label', '已公開，點擊改為私人');
       } else {
         btn.className = 'public-status-toggle public-status-toggle--private';
-        btn.innerHTML = svgLock + '<span class="public-status-label">公開</span>';
+        btn.innerHTML = svgLock + '<span class="public-status-label">私人</span>';
         btn.title = '目前為私人，點擊改為公開';
         btn.setAttribute('aria-label', '私人，點擊改為公開');
       }
@@ -906,10 +1056,17 @@
 
     window.togglePublicStatus = async () => {
       const newVal = !currentChecklist.is_public;
+      if (newVal) {
+        const ok = window.confirm(
+          '將此進度表設為「公開」後，其他人可在首頁看到此表單與內容。\n\n確定要公開嗎？'
+        );
+        if (!ok) return;
+      }
       const { error } = await supabase.from('checklists').update({ is_public: newVal }).eq('id', listId);
       if (!error) {
         currentChecklist.is_public = newVal;
         updateToggleBtnUI(newVal);
+        syncAuthBarListNoLogo();
         showToast(newVal ? '✨ 表單已公開！別人將可在首頁看到' : '🔒 表單已設為私人');
       } else {
         showToast('⚠️ 切換失敗');
@@ -975,6 +1132,9 @@
         ? '已有資料列時：僅可修改欄位名稱，或在末尾新增欄位（不可刪除或重排）。'
         : '尚無資料列：可自由新增、刪除欄位與調整名稱。';
 
+      const titleInput = document.getElementById('columnModalChecklistTitle');
+      if (titleInput) titleInput.value = currentChecklist.title || '';
+
       list.innerHTML = cols
         .map((c) => {
           const showDel = free && cols.length > 1;
@@ -1026,6 +1186,12 @@
         return;
       }
 
+      const newTitle = (document.getElementById('columnModalChecklistTitle')?.value || '').trim();
+      if (!newTitle) {
+        alert('請輸入進度表標題');
+        return;
+      }
+
       const prev = getFormColumns(currentChecklist);
       if (data.length > 0) {
         if (next.length < prev.length) {
@@ -1040,7 +1206,10 @@
         }
       }
 
-      const { error } = await supabase.from('checklists').update({ form_columns: next }).eq('id', listId);
+      const { error } = await supabase
+        .from('checklists')
+        .update({ form_columns: next, title: newTitle })
+        .eq('id', listId);
       if (error) {
         alert(
           '儲存失敗: ' +
@@ -1050,6 +1219,12 @@
         return;
       }
       currentChecklist.form_columns = next;
+      currentChecklist.title = newTitle;
+
+      let titleLabel = newTitle;
+      if (!isOwner && currentChecklist.is_public) titleLabel += ' 🌍';
+      const listTitleEl = document.getElementById('listTitle');
+      if (listTitleEl) listTitleEl.textContent = titleLabel;
 
       const nextIds = new Set(next.map((c) => c.id));
 
@@ -1075,7 +1250,7 @@
       closeColumnModal();
       renderTable();
       updateProgress();
-      showToast('欄位設定已儲存');
+      showToast('標題與欄位已儲存');
     };
 
     document.getElementById('btnSaveColumn')?.addEventListener('click', () => window.saveColumnSchema());
