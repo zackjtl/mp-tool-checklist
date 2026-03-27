@@ -10,5 +10,5 @@ alter table public.checklists
 alter table public.mp_tool_checklist
   add column if not exists cells jsonb not null default '{}'::jsonb;
 
-comment on column public.checklists.form_columns is '表頭定義：[{id,label}, ...] 順序即欄位順序';
+comment on column public.checklists.form_columns is '表頭定義：[{id,label,fieldType?}, ...]；fieldType 可為 text|textarea|date|url|checkbox，省略視同 text';
 comment on column public.mp_tool_checklist.cells is '各欄儲存格：{ 欄位id: 字串 }，舊列可仍依賴 tool_version／branch';
