@@ -218,6 +218,30 @@
     .textarea-cell-modal-body textarea:focus { outline: none; border-color: #4f46e5; }
     .textarea-cell-modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; flex-wrap: wrap; }
 
+    .collab-modal-dialog { max-width: min(440px, 96vw) !important; }
+    .collab-modal-body { text-align: left; }
+    .collab-modal-hint { font-size: 0.78rem; color: #64748b; margin-bottom: 14px; line-height: 1.45; }
+    .collab-toggle-row {
+      display: flex; align-items: flex-start; gap: 10px; margin-bottom: 16px; padding: 12px 14px;
+      background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;
+    }
+    .collab-toggle-row input { margin-top: 3px; flex-shrink: 0; }
+    .collab-toggle-row label { font-size: 0.85rem; color: #334155; cursor: pointer; line-height: 1.4; }
+    .collab-add-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; align-items: center; }
+    .collab-add-row .login-input { flex: 1 1 200px; margin-bottom: 0; }
+    .collab-list-label { font-size: 0.78rem; font-weight: 600; color: #475569; margin: 0 0 8px; }
+    .collab-list { list-style: none; max-height: 220px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; }
+    .collab-list li {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 10px 12px; font-size: 0.82rem; border-bottom: 1px solid #f1f5f9;
+    }
+    .collab-list li:last-child { border-bottom: none; }
+    .collab-list-email { word-break: break-all; color: #334155; }
+    .collab-list-remove { flex-shrink: 0; padding: 4px 10px; font-size: 0.72rem; }
+    .card-badge.collab {
+      border-color: #ddd6fe; background: #f5f3ff; color: #6d28d9;
+    }
+
     /* Landing：頂區與下方公開區同寬，登入鈕右緣對齊白卡右邊界 */
     .landing-hero-narrow { width: 100%; margin: 0 auto 20px; position: relative; min-height: 48px; box-sizing: border-box; }
     .landing-login-trigger { position: absolute; top: 0; right: 0; z-index: 2; }
@@ -480,6 +504,7 @@
       <div class="auth-bar-actions">
         <div class="auth-bar-list-tools" id="authBarListTools" style="display:none;" aria-label="進度表操作">
           <button type="button" id="btnTogglePublic" onclick="togglePublicStatus()" style="display:none;" aria-live="polite"></button>
+          <button type="button" class="detail-tool-icon" id="btnCollaborators" onclick="openCollaboratorModal()" style="display:none;" data-tooltip="協作者" title="協作者" aria-label="協作者"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
           <button type="button" class="detail-tool-icon" id="btnCopyShareLink" onclick="copyShareLink()" data-tooltip="複製分享連結" title="複製分享連結" aria-label="複製分享連結"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg></button>
           <button type="button" class="detail-tool-icon detail-tool-icon--danger" id="btnDeleteChecklist" onclick="deleteCurrentChecklist()" style="display:none;" data-tooltip="刪除進度表" title="刪除進度表" aria-label="刪除進度表"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
         </div>
@@ -544,6 +569,16 @@
         <button class="btn primary" onclick="createChecklist()">+ 建立新表單</button>
       </div>
       <div class="checklist-grid" id="dashboardMyList">
+        <div class="spinner">載入中...</div>
+      </div>
+    </div>
+
+    <!-- 與我協作（擁有者邀請） -->
+    <div class="dashboard-section">
+      <div class="dashboard-header">
+        <h2><svg class="heading-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 與我協作</h2>
+      </div>
+      <div class="checklist-grid" id="dashboardSharedList">
         <div class="spinner">載入中...</div>
       </div>
     </div>
@@ -618,6 +653,29 @@
   <div class="status-toast" id="toast"></div>
 
   <!-- 多行儲存格編輯 -->
+  <!-- 協作者（僅擁有者） -->
+  <div id="collaboratorModal" class="login-modal" aria-hidden="true" role="dialog" aria-labelledby="collaboratorModalTitle" style="z-index: 1120;">
+    <div class="login-modal-backdrop" id="collaboratorModalBackdrop"></div>
+    <div class="login-modal-dialog collab-modal-dialog">
+      <button type="button" class="login-modal-close" id="btnCloseCollaboratorModal" aria-label="關閉">×</button>
+      <div class="login-container collab-modal-body">
+        <h2 id="collaboratorModalTitle">協作者</h2>
+        <p class="collab-modal-hint" id="collaboratorModalHint">開啟「允許協作者編輯」後，已加入的成員可編輯列內容與狀態。請輸入對方帳號的 Email（須已註冊並登入過本系統）。</p>
+        <div class="collab-toggle-row">
+          <input type="checkbox" id="collabToggleEnabled" />
+          <label for="collabToggleEnabled">允許協作者編輯進度列（新增／修改／刪除項目與儲存格）</label>
+        </div>
+        <label for="collabInviteEmail" class="column-modal-fields-label" style="margin-top:0;">以 Email 加入協作者</label>
+        <div class="collab-add-row">
+          <input type="email" id="collabInviteEmail" class="login-input" placeholder="對方 Email" autocomplete="email" />
+          <button type="button" class="btn primary" id="btnCollabAdd" onclick="submitAddCollaborator()">加入</button>
+        </div>
+        <p class="collab-list-label">目前協作者</p>
+        <ul class="collab-list" id="collaboratorListUl"></ul>
+      </div>
+    </div>
+  </div>
+
   <div id="textareaCellModal" class="login-modal" aria-hidden="true" role="dialog" aria-labelledby="textareaCellModalTitle" style="z-index: 1150;">
     <div class="login-modal-backdrop" id="textareaCellModalBackdrop"></div>
     <div class="login-modal-dialog textarea-cell-modal-dialog">
@@ -689,6 +747,10 @@
     let data = [];
     let currentChecklist = null; 
     let isOwner = false;
+    /** 目前使用者是否為此表的協作者（含擁有者以外的成員） */
+    let isCollaborator = false;
+    /** 是否可編輯進度列：擁有者永遠 true；協作者需擁有者開啟 collaboration_enabled */
+    let canEditTable = false;
     let columnModalCreateMode = false;
     /** 擁有者：false＝表格儲存格檢視；true＝可編輯儲存格 */
     let ownerCellEditMode = false;
@@ -960,6 +1022,14 @@
       delete m.dataset.editColId;
     }
 
+    function closeCollaboratorModal() {
+      const m = document.getElementById('collaboratorModal');
+      if (!m) return;
+      m.classList.remove('is-open');
+      m.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
     function syncListDetailToolbar() {
       const tb = document.getElementById('listDetailToolbar');
       const addBtn = document.getElementById('btnAddNewRow');
@@ -967,7 +1037,7 @@
       const finBtn = document.getElementById('btnFinishEdit');
       const colBtn = document.getElementById('btnManageColumnsToolbar');
       if (!tb || !addBtn || !editBtn || !finBtn || !colBtn) return;
-      const show = !!(isOwner && listId && currentChecklist);
+      const show = !!(session && listId && currentChecklist && canEditTable);
       tb.classList.toggle('is-visible', show);
       if (!show) {
         addBtn.style.display = 'none';
@@ -977,20 +1047,20 @@
         return;
       }
       addBtn.style.display = 'inline-flex';
-      colBtn.style.display = 'inline-flex';
+      colBtn.style.display = isOwner ? 'inline-flex' : 'none';
       editBtn.style.display = ownerCellEditMode ? 'none' : 'inline-flex';
       finBtn.style.display = ownerCellEditMode ? 'inline-flex' : 'none';
     }
 
     window.enterOwnerCellEditMode = function () {
-      if (!isOwner || !listId) return;
+      if (!canEditTable || !listId) return;
       ownerCellEditMode = true;
       syncListDetailToolbar();
       renderTable();
     };
 
     window.openTextareaCellModal = function (rowId, colId) {
-      if (!ownerCellEditMode || !isOwner) return;
+      if (!ownerCellEditMode || !canEditTable) return;
       const row = data.find((r) => String(r.id) === String(rowId));
       if (!row) return;
       const col = getColumnById(colId);
@@ -1226,6 +1296,7 @@
     function showView(viewId) {
       if (viewId !== 'view-login') closeLoginModal();
       closeColumnModal();
+      closeCollaboratorModal();
       ['view-login', 'view-dashboard', 'view-list'].forEach(id => {
         document.getElementById(id).classList.remove('active');
       });
@@ -1260,21 +1331,35 @@
         closeColumnModal();
         return;
       }
+      const collabM = document.getElementById('collaboratorModal');
+      if (collabM && collabM.classList.contains('is-open')) {
+        closeCollaboratorModal();
+        return;
+      }
       const m = document.getElementById('loginModal');
       if (m && m.classList.contains('is-open')) closeLoginModal();
     });
     document.getElementById('btnCloseColumnModal')?.addEventListener('click', closeColumnModal);
     document.getElementById('columnModalBackdrop')?.addEventListener('click', closeColumnModal);
+    document.getElementById('btnCloseCollaboratorModal')?.addEventListener('click', closeCollaboratorModal);
+    document.getElementById('collaboratorModalBackdrop')?.addEventListener('click', closeCollaboratorModal);
 
     // --- Components ---
-    function buildCardHTML(list, isMine) {
+    /** @param {'mine'|'shared'|'other'} cardKind */
+    function buildCardHTML(list, cardKind) {
+      const isMine = cardKind === 'mine';
       const iconGlobe =
         '<svg class="heading-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
       const iconLock =
         '<svg class="heading-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
-      const badgeHTML = list.is_public
+      const iconUsers =
+        '<svg class="heading-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
+      let badgeHTML = list.is_public
         ? `<span class="card-badge public">${iconGlobe} 已公開</span>`
         : `<span class="card-badge private">${iconLock} 私人</span>`;
+      if (cardKind === 'shared') {
+        badgeHTML = `<span class="card-badge collab">${iconUsers} 與我協作</span>` + badgeHTML;
+      }
         
       const ownerName = list.profiles?.nickname || list.profiles?.email || '未知使用者';
       const items = list.mp_tool_checklist || [];
@@ -1294,7 +1379,7 @@
           <p style="margin-bottom: 2px;">建立者：<strong>${escHtml(ownerName)}</strong></p>
           <p>建立於：${new Date(list.created_at).toLocaleDateString()}</p>
           ${progressHTML}
-          ${isMine ? badgeHTML : ''}`;
+          ${isMine || cardKind === 'shared' ? badgeHTML : ''}`;
 
       if (isMine) {
         return `
@@ -1327,7 +1412,7 @@
           grid.innerHTML = '<div class="empty-state">目前還沒有公開的表單哦！(或發生錯誤: ' + (error?.message || '') + ')</div>';
           return;
         }
-        grid.innerHTML = publicLists.map((list) => buildCardHTML(list, false)).join('');
+        grid.innerHTML = publicLists.map((list) => buildCardHTML(list, 'other')).join('');
       } catch (err) {
         console.error('loadLandingPublicLists Error:', err);
         if (gen !== renderGeneration) return;
@@ -1349,7 +1434,32 @@
         if (!myLists || myLists.length === 0 || e1) {
           myGrid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">尚無表單，點擊上方按鈕建立！' + (e1 ? '(錯誤: '+e1.message+')' : '') + '</div>';
         } else {
-          myGrid.innerHTML = myLists.map(l => buildCardHTML(l, true)).join('');
+          myGrid.innerHTML = myLists.map(l => buildCardHTML(l, 'mine')).join('');
+        }
+
+        const { data: collabRows, error: eShared } = await supabase
+          .from('checklist_collaborators')
+          .select('checklist_id, checklists(id, title, created_at, user_id, is_public, collaboration_enabled, mp_tool_checklist(status), profiles(nickname, email))')
+          .eq('user_id', session.user.id);
+
+        if (gen !== renderGeneration) return;
+
+        const sharedGrid = document.getElementById('dashboardSharedList');
+        if (eShared) {
+          sharedGrid.innerHTML =
+            '<div class="empty-state" style="grid-column: 1/-1;">無法載入協作表單（請確認已執行資料庫 migration 003）。錯誤：' +
+            escHtml(eShared.message) +
+            '</div>';
+        } else {
+          const sharedLists = (collabRows || [])
+            .map((r) => r.checklists)
+            .filter((c) => c && c.id);
+          if (sharedLists.length === 0) {
+            sharedGrid.innerHTML =
+              '<div class="empty-state" style="grid-column: 1/-1;">尚無人邀請您協作。請向擁有者索取進度表連結，並由對方以您的 Email 加入協作者。</div>';
+          } else {
+            sharedGrid.innerHTML = sharedLists.map((l) => buildCardHTML(l, 'shared')).join('');
+          }
         }
 
       // Load Others Public Lists
@@ -1362,7 +1472,7 @@
       if (!publicLists || publicLists.length === 0 || e2) {
         pubGrid.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">目前還沒有別人發布公開表單哦！' + (e2 ? '(錯誤: '+e2.message+')' : '') + '</div>';
       } else {
-        pubGrid.innerHTML = publicLists.map(l => buildCardHTML(l, false)).join('');
+        pubGrid.innerHTML = publicLists.map(l => buildCardHTML(l, 'other')).join('');
       }
       } catch (err) {
         console.error("loadDashboard Error:", err);
@@ -1508,37 +1618,179 @@
         document.getElementById('tableBody').innerHTML = '<tr><td colspan="4" class="empty-state">表單不存在</td></tr>';
         document.getElementById('authBarHero')?.classList.remove('auth-bar-hero--list-no-logo');
         highlightNewRowId = null;
+        isOwner = false;
+        isCollaborator = false;
+        canEditTable = false;
+        const bc = document.getElementById('btnCollaborators');
+        if (bc) bc.style.display = 'none';
         syncListDetailToolbar();
         return;
       }
 
+      ownerCellEditMode = false;
       currentChecklist = listData;
+      if (currentChecklist.collaboration_enabled == null) currentChecklist.collaboration_enabled = false;
       syncAuthBarListNoLogo();
-      isOwner = session && session.user.id === currentChecklist.user_id;
+      isOwner = !!(session && session.user.id === currentChecklist.user_id);
+      isCollaborator = false;
+      if (session && !isOwner) {
+        const { data: crow, error: crowErr } = await supabase
+          .from('checklist_collaborators')
+          .select('user_id')
+          .eq('checklist_id', listId)
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+        if (!crowErr) isCollaborator = !!crow;
+      }
+      canEditTable = isOwner || (isCollaborator && currentChecklist.collaboration_enabled === true);
 
       // 訪客看他人公開表：標題旁顯示地球圖示（SVG，與首頁一致）
       renderListTitleH1(currentChecklist.title, !isOwner && currentChecklist.is_public);
       const ownerName = currentChecklist.profiles?.nickname || currentChecklist.profiles?.email || '未知使用者';
-      const permLabel = isOwner ? '擁有者 / 可編輯' : '唯讀';
+      let permLabel = '唯讀';
+      if (isOwner) permLabel = '擁有者／可編輯';
+      else if (canEditTable) permLabel = '協作者／可編輯';
+      else if (isCollaborator) permLabel = '協作者／僅檢視（擁有者未開放共同編輯）';
       document.getElementById('listOwnerDate').innerHTML = `建立者：<strong>${escHtml(ownerName)}</strong> &nbsp;•&nbsp; 建立於：${new Date(currentChecklist.created_at).toLocaleDateString()} &nbsp;•&nbsp; ${escHtml(permLabel)}`;
 
       highlightNewRowId = null;
+      const btnCollab = document.getElementById('btnCollaborators');
       if (isOwner) {
-        ownerCellEditMode = false;
         document.getElementById('btnDeleteChecklist').style.display = 'inline-flex';
 
         const btnToggle = document.getElementById('btnTogglePublic');
         btnToggle.style.display = 'inline-flex';
         updateToggleBtnUI(currentChecklist.is_public);
+        if (btnCollab) btnCollab.style.display = 'inline-flex';
         syncListDetailToolbar();
       } else {
         document.getElementById('btnDeleteChecklist').style.display = 'none';
         document.getElementById('btnTogglePublic').style.display = 'none';
+        if (btnCollab) btnCollab.style.display = 'none';
         syncListDetailToolbar();
       }
 
       await loadItems();
     }
+
+    function collabRpcErrorMessage(code) {
+      const map = {
+        user_not_found: '找不到此 Email 的註冊使用者，請確認對方已用該信箱登入過本系統。',
+        forbidden: '無權限操作。',
+        cannot_invite_self: '不可將自己設為協作者。',
+        invalid_email: 'Email 格式不正確。',
+        checklist_not_found: '找不到此進度表。',
+        not_authenticated: '請先登入。',
+      };
+      return map[code] || '無法加入協作者（' + (code || '未知錯誤') + '）';
+    }
+
+    async function loadCollaboratorsIntoModal() {
+      const ul = document.getElementById('collaboratorListUl');
+      if (!ul || !listId) return;
+      ul.innerHTML = '<li style="cursor:default;color:#94a3b8;">載入中…</li>';
+      const { data: rows, error } = await supabase
+        .from('checklist_collaborators')
+        .select('user_id, invited_email, created_at')
+        .eq('checklist_id', listId)
+        .order('created_at', { ascending: true });
+      if (error) {
+        ul.innerHTML =
+          '<li style="cursor:default;color:#b91c1c;">無法載入協作者列表：' + escHtml(error.message) + '</li>';
+        return;
+      }
+      if (!rows || rows.length === 0) {
+        ul.innerHTML = '<li style="cursor:default;color:#64748b;border:none;">尚無協作者</li>';
+        return;
+      }
+      ul.innerHTML = rows
+        .map(
+          (r) =>
+            `<li><span class="collab-list-email">${escHtml(r.invited_email)}</span><button type="button" class="btn danger collab-list-remove" data-uid="${escAttr(
+              String(r.user_id)
+            )}" onclick="removeCollaboratorByUserId(this.getAttribute('data-uid'))">移除</button></li>`
+        )
+        .join('');
+    }
+
+    window.openCollaboratorModal = async function () {
+      if (!isOwner || !listId || !currentChecklist) return;
+      const m = document.getElementById('collaboratorModal');
+      const chk = document.getElementById('collabToggleEnabled');
+      if (chk) chk.checked = currentChecklist.collaboration_enabled === true;
+      const emailInp = document.getElementById('collabInviteEmail');
+      if (emailInp) emailInp.value = '';
+      await loadCollaboratorsIntoModal();
+      if (!m) return;
+      m.classList.add('is-open');
+      m.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    };
+
+    window.submitAddCollaborator = async function () {
+      if (!isOwner || !listId) return;
+      const inp = document.getElementById('collabInviteEmail');
+      const email = (inp && inp.value ? inp.value : '').trim();
+      if (!email) {
+        alert('請輸入對方的 Email');
+        return;
+      }
+      const { data: rpcResult, error } = await supabase.rpc('add_checklist_collaborator_by_email', {
+        p_checklist_id: listId,
+        p_email: email,
+      });
+      if (error) {
+        alert('加入失敗：' + error.message);
+        return;
+      }
+      const res = rpcResult;
+      if (res && typeof res === 'object' && res.ok === false) {
+        alert(collabRpcErrorMessage(res.error));
+        return;
+      }
+      if (inp) inp.value = '';
+      showToast('已加入協作者');
+      await loadCollaboratorsIntoModal();
+    };
+
+    window.removeCollaboratorByUserId = async function (userId) {
+      if (!isOwner || !listId || !userId) return;
+      if (!confirm('確定移除此協作者？對方將無法再存取此進度表（除非表為公開）。')) return;
+      const { error } = await supabase
+        .from('checklist_collaborators')
+        .delete()
+        .eq('checklist_id', listId)
+        .eq('user_id', userId);
+      if (error) {
+        alert('移除失敗：' + error.message);
+        return;
+      }
+      showToast('已移除協作者');
+      await loadCollaboratorsIntoModal();
+    };
+
+    document.getElementById('collabInviteEmail')?.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') {
+        ev.preventDefault();
+        void window.submitAddCollaborator();
+      }
+    });
+
+    document.getElementById('collabToggleEnabled')?.addEventListener('change', async function () {
+      if (!isOwner || !listId || !currentChecklist) {
+        if (currentChecklist) this.checked = currentChecklist.collaboration_enabled === true;
+        return;
+      }
+      const v = this.checked;
+      const { error } = await supabase.from('checklists').update({ collaboration_enabled: v }).eq('id', listId);
+      if (error) {
+        this.checked = !v;
+        alert('更新失敗：' + error.message);
+        return;
+      }
+      currentChecklist.collaboration_enabled = v;
+      showToast(v ? '已開放協作者編輯進度列' : '已關閉協作者編輯（協作者改為僅能檢視）');
+    });
 
     function updateToggleBtnUI(isPublic) {
       const btn = document.getElementById('btnTogglePublic');
@@ -1560,6 +1812,7 @@
     }
 
     window.togglePublicStatus = async () => {
+      if (!isOwner || !listId) return;
       const newVal = !currentChecklist.is_public;
       if (newVal) {
         const ok = window.confirm(
@@ -1604,6 +1857,7 @@
     }
 
     window.addNewRow = async () => {
+      if (!canEditTable || !listId) return;
       const cols = getFormColumns(currentChecklist);
       const cells = {};
       cols.forEach((c) => {
@@ -1775,6 +2029,7 @@
     document.getElementById('textareaCellModalBackdrop')?.addEventListener('click', () => closeTextareaCellModal());
 
     window.deleteRow = async (id) => {
+      if (!canEditTable) return;
       if (!confirm('確定要刪除這個項目嗎？')) return;
       const { error } = await supabase.from('mp_tool_checklist').delete().eq('id', id);
       if (error) alert('刪除失敗: ' + error.message);
@@ -1797,7 +2052,7 @@
       const thead = document.getElementById('tableHead');
       if (!thead || !currentChecklist) return;
       const cols = getFormColumns(currentChecklist);
-      const actionTh = isOwner ? '<th class="action-cell-head" style="width: 60px;"></th>' : '';
+      const actionTh = canEditTable ? '<th class="action-cell-head" style="width: 60px;"></th>' : '';
       const ths = cols
         .map((c, i) => {
           const extra = i >= 1 ? ' col-cell branch col-mobile-hide' : ' col-cell';
@@ -1811,10 +2066,10 @@
       renderTableHead();
       const tbody = document.getElementById('tableBody');
       const cols = getFormColumns(currentChecklist);
-      const actionCol = isOwner ? 1 : 0;
+      const actionCol = canEditTable ? 1 : 0;
       const colSpan = cols.length + 1 + actionCol;
 
-      tbody.className = isOwner && ownerCellEditMode ? 'owner-editing-cells' : '';
+      tbody.className = canEditTable && ownerCellEditMode ? 'owner-editing-cells' : '';
       tbody.innerHTML = '';
       if (data.length === 0) {
         tbody.innerHTML = `<tr><td colspan="${colSpan}" class="empty-state">尚無進度項目</td></tr>`;
@@ -1834,20 +2089,20 @@
         cols.forEach((c, i) => {
           const tdCls = 'col-cell' + (i >= 1 ? ' branch col-mobile-hide' : '');
           const val = getCellValue(row, c.id);
-          const ownerEditingCells = isOwner && ownerCellEditMode;
+          const ownerEditingCells = canEditTable && ownerCellEditMode;
           const cellHtml = ownerEditingCells ? renderOwnerCellHtml(c, row, i) : renderGuestCellHtml(c, val, i);
           tds += `<td class="${tdCls}">${cellHtml}</td>`;
         });
 
         let statusCell;
-        if (isOwner) {
+        if (canEditTable) {
           const options = STATUSES.map((s) => `<option value="${s}" ${row.status === s ? 'selected' : ''}>${s}</option>`).join('');
           statusCell = `<select class="status-select" data-id="${row.id}" data-status="${row.status}" onchange="changeStatus(${row.id}, this)">${options}</select>`;
         } else {
           statusCell = `<span class="status-badge ${row.status}">${row.status}</span>`;
         }
 
-        const actionCell = isOwner
+        const actionCell = canEditTable
           ? `<td class="action-cell"><button class="btn-delete" onclick="deleteRow(${row.id})" title="刪除">✕</button></td>`
           : '';
 
@@ -1857,6 +2112,7 @@
     }
 
     window.changeStatus = async (id, select) => {
+      if (!canEditTable) return;
       const newStatus = select.value;
       select.dataset.status = newStatus;
       const { error } = await supabase.from('mp_tool_checklist').update({ status: newStatus, checked: newStatus === '已完成', updated_at: new Date().toISOString() }).eq('id', id);
@@ -1964,7 +2220,7 @@
     }
 
     window.finishOwnerCellEditMode = async function () {
-      if (!isOwner || !listId || !ownerCellEditMode) return;
+      if (!canEditTable || !listId || !ownerCellEditMode) return;
       const modal = document.getElementById('textareaCellModal');
       if (modal && modal.classList.contains('is-open')) {
         const okModal = await saveTextareaModalToServer();
@@ -2023,9 +2279,12 @@
     };
 
     document.getElementById('homeBtn')?.addEventListener('click', async (e) => {
-      if (!isOwner || !listId) return;
+      if (!listId) return;
+      const goHome = () => window.location.assign(window.location.pathname + '?');
+      const needIntercept = isOwner || (canEditTable && ownerCellEditMode);
+      if (!needIntercept) return;
       e.preventDefault();
-      if (ownerCellEditMode) {
+      if (ownerCellEditMode && canEditTable) {
         try {
           const modal = document.getElementById('textareaCellModal');
           if (modal && modal.classList.contains('is-open')) {
@@ -2055,17 +2314,17 @@
           return;
         }
       }
-      window.location.assign(window.location.pathname + '?');
+      goHome();
     });
 
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden' && isOwner && listId && ownerCellEditMode) {
+      if (document.visibilityState === 'hidden' && canEditTable && listId && ownerCellEditMode) {
         void window.flushPendingCellSaves();
       }
     });
 
     window.addEventListener('pagehide', () => {
-      if (isOwner && listId && ownerCellEditMode) {
+      if (canEditTable && listId && ownerCellEditMode) {
         void window.flushPendingCellSaves();
       }
     });
