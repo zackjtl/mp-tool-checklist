@@ -283,16 +283,61 @@
     }
     .dashboard-header h2 .heading-icon { margin-top: 1px; }
     .card-badge .heading-icon { width: 0.95em; height: 0.95em; color: inherit; opacity: 0.95; }
-    .checklist-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+    .checklist-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); align-items: stretch; }
     .checklist-card-shell { position: relative; height: 100%; }
-    .checklist-card-shell .checklist-card { padding-bottom: 40px; }
+    /* 我的表：外殼即卡片本體，頂列＝標籤靠左＋刪除靠右，避免垃圾桶絕對定位溢出 */
+    .checklist-card-shell--mine {
+      display: flex;
+      flex-direction: column;
+      min-height: 220px;
+      height: 100%;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s, background 0.2s;
+    }
+    .checklist-card-shell--mine:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+      border-color: #cbd5e1;
+      background: #fff;
+    }
+    .checklist-card-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-shrink: 0;
+      padding: 12px 16px 10px;
+      border-bottom: 1px solid #e8eef4;
+    }
+    .checklist-card-toolbar .card-badges-row {
+      margin: 0;
+      padding: 0;
+      border-bottom: none;
+      flex: 1;
+      min-width: 0;
+      justify-content: flex-start;
+    }
     /* 與詳情頁 detail-tool-icon--danger 同風格，尺寸較小 */
     .checklist-card-delete {
-      position: absolute; bottom: 10px; right: 10px; z-index: 3;
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 30px; height: 30px; padding: 0; border: none; border-radius: 8px;
-      background: transparent; color: #94a3b8; cursor: pointer;
-      transition: background 0.15s, color 0.15s; font-family: inherit;
+      position: relative;
+      z-index: 3;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      padding: 0;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      font-family: inherit;
     }
     .checklist-card-delete:hover { background: #fef2f2; color: #dc2626; }
     .checklist-card-delete svg { display: block; }
@@ -302,14 +347,73 @@
       white-space: nowrap; border-radius: 6px; z-index: 20; pointer-events: none;
       box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
     }
-    .checklist-card { background: #f8fafc; padding: 18px 20px; border-radius: 10px; text-decoration: none; color: inherit; transition: 0.2s; border: 1px solid #e2e8f0; display: block; position: relative; }
-    .checklist-card:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.05); border-color: #cbd5e1; background: #fff; }
+    .checklist-card {
+      background: #f8fafc;
+      padding: 18px 20px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s, background 0.2s;
+      border: 1px solid #e2e8f0;
+      display: block;
+      position: relative;
+      min-height: 220px;
+      box-sizing: border-box;
+    }
+    .checklist-card:hover:not(.checklist-card--mine-body) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+      border-color: #cbd5e1;
+      background: #fff;
+    }
+    /* 我的表：可點區域在工具列下方，不重複邊框與浮起（由 shell 負責） */
+    .checklist-card--mine-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 14px 18px 18px;
+      background: transparent;
+    }
+    .checklist-card--mine-body:hover {
+      transform: none;
+      box-shadow: none;
+      border-color: transparent;
+      background: transparent;
+    }
+    .checklist-card-shell--mine:hover .checklist-card--mine-body {
+      background: transparent;
+    }
     .checklist-card h3 { font-size: 1.05rem; margin-bottom: 6px; color: #0f172a; }
     .checklist-card p { font-size: 0.78rem; color: #64748b; }
+    /* 首頁／儀表板卡片：公開、協作等標籤（非「我的表」頂列時與內文區隔） */
+    .card-badges-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin: -4px 0 12px 0;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e8eef4;
+    }
+    .checklist-card--mine-body .card-progress {
+      margin-top: auto;
+    }
     .card-badge {
-      position: absolute; top: 16px; right: 16px; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px;
-      border: 1px solid #c7d2fe; background: #eef2ff; color: #4f46e5;
-      display: inline-flex; align-items: center; gap: 4px;
+      position: static;
+      font-size: 0.65rem;
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid #c7d2fe;
+      background: #eef2ff;
+      color: #4f46e5;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
     }
     .card-badge.private { border-color: #e2e8f0; background: #f1f5f9; color: #64748b; }
 
@@ -1360,7 +1464,10 @@
       if (cardKind === 'shared') {
         badgeHTML = `<span class="card-badge collab">${iconUsers} 與我協作</span>` + badgeHTML;
       }
-        
+
+      const badgesRowInner = `<div class="card-badges-row" aria-label="狀態標籤">${badgeHTML}</div>`;
+      const badgesRowForNonMine = cardKind === 'shared' ? badgesRowInner : '';
+
       const ownerName = list.profiles?.nickname || list.profiles?.email || '未知使用者';
       const items = list.mp_tool_checklist || [];
       const total = items.length;
@@ -1374,22 +1481,25 @@
         </div>
       `;
 
-      const cardInner = `
+      const bodyInner = `
           <h3>${escHtml(list.title)}</h3>
           <p style="margin-bottom: 2px;">建立者：<strong>${escHtml(ownerName)}</strong></p>
           <p>建立於：${new Date(list.created_at).toLocaleDateString()}</p>
-          ${progressHTML}
-          ${isMine || cardKind === 'shared' ? badgeHTML : ''}`;
+          ${progressHTML}`;
 
       if (isMine) {
         return `
-      <div class="checklist-card-shell">
-        <a href="?list_id=${escAttr(String(list.id))}" class="checklist-card">${cardInner}
+      <div class="checklist-card-shell checklist-card-shell--mine">
+        <div class="checklist-card-toolbar">
+          ${badgesRowInner}
+          <button type="button" class="checklist-card-delete" data-tooltip="刪除進度表" title="刪除此進度表" aria-label="刪除此進度表" data-checklist-id="${escAttr(String(list.id))}" onclick="event.preventDefault(); event.stopPropagation(); deleteMyChecklist(this.getAttribute('data-checklist-id'))"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+        </div>
+        <a href="?list_id=${escAttr(String(list.id))}" class="checklist-card checklist-card--mine-body">${bodyInner}
         </a>
-        <button type="button" class="checklist-card-delete" data-tooltip="刪除進度表" title="刪除此進度表" aria-label="刪除此進度表" data-checklist-id="${escAttr(String(list.id))}" onclick="event.preventDefault(); event.stopPropagation(); deleteMyChecklist(this.getAttribute('data-checklist-id'))"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
       </div>`;
       }
 
+      const cardInner = `${badgesRowForNonMine}${bodyInner}`;
       return `
         <a href="?list_id=${escAttr(String(list.id))}" class="checklist-card">${cardInner}
         </a>`;
