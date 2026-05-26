@@ -22,9 +22,9 @@
 | 官方 DB 密碼 | ⚠️ 需自行取得 | **不在 repo 內** |
 | Zeabur `PGRST_DB_SCHEMAS` 設定 | ❓ 待確認 | 步驟一 |
 | Zeabur 執行 `000_mp_checklist_schema.sql` | ❓ 待確認 | 步驟二 |
-| 業務資料匯入（步驟三） | ❌ 未完成 | 原電腦缺 `pg_dump` |
-| Auth 使用者匯入（步驟四） | ❓ 待確認 | 視 Zeabur 是否已有使用者 |
-| 前端切換至 Zeabur | ❌ 未完成 | 步驟六 |
+| 業務資料匯入（步驟三） | ✅ 已完成 | |
+| Auth 使用者匯入（步驟四） | ❌ 未完成 | Zeabur auth.users 全空，需執行 `migrate-auth-to-zeabur.ps1` |
+| 前端切換至 Zeabur | 🟡 程式已備妥 | 設 env + `SUPABASE_DB_SCHEMA=mp_checklist` 後部署；預設仍連官方 `public` |
 
 ---
 
@@ -164,10 +164,22 @@ $env:TARGET_DB = "postgresql://postgres:${pwdTgt}@[ZEABUR_EXTERNAL_HOST]:5432/po
 
 暫存檔在 `tmp/migration/`（已加入 `.gitignore`，勿 commit）。
 
-### 4. Auth 使用者（視情況）
+### 4. Auth 使用者（情境 A：Zeabur 全空）
 
-- **Zeabur 尚無本 App 使用者** → 需額外匯出 `auth.users` / `auth.identities`（見 `MIGRATION_ZEABUR.md` 步驟四 情境 A）
-- **使用者已在 Zeabur 註冊過** → 可跳過，只匯業務資料
+```powershell
+$env:SOURCE_DB = "..."   # 同步驟三
+$env:TARGET_DB = "..."   # 同步驟三
+
+.\supabase\scripts\migrate-auth-to-zeabur.ps1
+```
+
+腳本會：
+
+1. 從官方匯出 `auth.users`、`auth.identities`
+2. 使用 `ON CONFLICT DO NOTHING` 安全匯入（可重複執行）
+3. 補齊 `mp_checklist.profiles` 缺漏列
+
+> 完成後舊 session JWT 失效，使用者需重新登入。
 
 ### 5. Auth 設定（Google OAuth / Magic Link）
 
@@ -175,10 +187,15 @@ $env:TARGET_DB = "postgresql://postgres:${pwdTgt}@[ZEABUR_EXTERNAL_HOST]:5432/po
 
 ### 6. 更新前端
 
-修改 `index.html`：
+程式已改為透過 `/runtime-config.js` 注入（`server.js` 讀環境變數）：
 
-- `SUPABASE_URL`、`SUPABASE_KEY` → Zeabur 值
-- 所有 DB 操作改 `.schema('mp_checklist').from(...)`
+| 環境變數 | 說明 |
+|----------|------|
+| `SUPABASE_URL` | Zeabur Supabase API URL |
+| `SUPABASE_ANON_KEY` | Zeabur anon key |
+| `SUPABASE_DB_SCHEMA` | 設為 `mp_checklist`（未設則預設 `public`，仍連官方） |
+
+所有 DB 操作已改為 `db().from(...)` / `db().rpc(...)`（`db()` = `supabase.schema(DB_SCHEMA)`）。
 
 ### 7. 驗收
 
@@ -196,6 +213,13 @@ $env:TARGET_DB = "postgresql://postgres:${pwdTgt}@[ZEABUR_EXTERNAL_HOST]:5432/po
 | `postgresql.zeabur.internal` 連不上 | Zeabur **內網** host，本機無法解析 | 改用 **External / Public** host |
 | Project Settings 沒有 Database | Dashboard UI 改版 | 用 **Connect** 或左側 **Database** |
 | 密碼含 `@` 連線失敗 | URI 分隔符衝突 | URL 編碼 `%40` 或用 `EscapeDataString` |
+| 官方 `db.*.supabase.co` 無法解析／連不上 | 僅有 IPv6，本機無 IPv6 路由 | Dashboard → **Connect** → **Session pooler** URI 作為 `SOURCE_DB` |
+| `TARGET` 用 Supabase API 網域 | `jerrysupabase.zeabur.app` 是 API，非 Postgres | Zeabur **Postgres** 服務 → **External** 連線字串 |
+| `password authentication failed for user "postgres"` | 主機／埠正確，密碼錯 | 用 **Postgres 服務** 的 `POSTGRES_PASSWORD`，不是 anon key／JWT |
+| 外部埠 | 公有網路轉送 | 用 **30206** 等外部埠，不是容器內 5432 |
+| `pg_dump: no matching tables were found` | `SOURCE_DB` 連到**別的** Supabase 專案 | 使用者須為 `postgres.iotjuquhpqctgsnetmnc`，pooler 主機從**該專案** Connect 複製 |
+| `host "postgresql" not known` | `SOURCE_DB` 重複 `postgresql://` | 只保留一個前綴，勿 `postgresql://postgresql://...` |
+| `transaction_timeout` unrecognized | pg_dump 18 vs 舊版 Zeabur Postgres | 腳本已自動過濾；更新後重跑 migration |
 
 ---
 

@@ -1,0 +1,49 @@
+# Run Zeabur auth migration (loads .env, adds PostgreSQL bin to PATH)
+$ErrorActionPreference = 'Stop'
+$repoRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
+Set-Location $repoRoot
+
+. (Join-Path $PSScriptRoot 'load-dotenv.ps1')
+
+$pgCandidates = @(
+  'C:\Program Files\PostgreSQL\18\bin',
+  'C:\Program Files\PostgreSQL\17\bin',
+  'C:\Program Files\PostgreSQL\16\bin'
+)
+$pgBin = $pgCandidates | Where-Object { Test-Path (Join-Path $_ 'pg_dump.exe') } | Select-Object -First 1
+if (-not $pgBin) {
+  Write-Error "pg_dump not found. Install PostgreSQL client tools."
+}
+$env:Path = "$pgBin;$env:Path"
+
+if (-not $env:SOURCE_DB -or -not $env:TARGET_DB) {
+  Write-Error "Set SOURCE_DB and TARGET_DB in repo root .env"
+}
+
+foreach ($label in @('SOURCE_DB', 'TARGET_DB')) {
+  $uri = (Get-Item "Env:$label").Value
+  if ($uri -match '^postgresql://postgresql://') {
+    Write-Error "$label has duplicate 'postgresql://' prefix."
+  }
+  if ($uri -notmatch '^postgresql://[^/]+@[^:/]+:\d+/') {
+    Write-Error "$label URI format looks invalid."
+  }
+}
+
+Write-Host "PostgreSQL: $(pg_dump --version)"
+
+function Test-DbConnection {
+  param([string]$Label, [string]$Uri)
+  Write-Host "Testing $Label..."
+  psql $Uri -v ON_ERROR_STOP=1 -tAc "SELECT 1 AS ok" | Out-Null
+  if ($LASTEXITCODE -ne 0) {
+    throw "${Label} connection failed (exit $LASTEXITCODE). Check .env URI."
+  }
+}
+
+Test-DbConnection -Label 'SOURCE_DB' -Uri $env:SOURCE_DB
+Test-DbConnection -Label 'TARGET_DB' -Uri $env:TARGET_DB
+
+$migrateScript = Join-Path $PSScriptRoot 'migrate-auth-to-zeabur.ps1'
+& $migrateScript
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

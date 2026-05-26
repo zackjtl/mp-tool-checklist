@@ -51,6 +51,7 @@ create table if not exists mp_checklist.mp_tool_checklist (
   checklist_id uuid not null references mp_checklist.checklists (id) on delete cascade,
   tool_version text not null default '',
   branch text not null default '',
+  period text,
   status text not null default '未完成',
   checked boolean not null default false,
   cells jsonb not null default '{}'::jsonb,

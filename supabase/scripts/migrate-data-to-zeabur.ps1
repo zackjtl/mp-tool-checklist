@@ -30,7 +30,45 @@ $tables = @(
   'checklist_collaborators'
 )
 
+$Utf8NoBom = New-Object System.Text.UTF8Encoding $false
+
+function Read-SqlUtf8 {
+  param([string]$Path)
+  [System.IO.File]::ReadAllText($Path, $Utf8NoBom)
+}
+
+function Write-SqlUtf8 {
+  param([string]$Path, [string]$Content)
+  [System.IO.File]::WriteAllText($Path, $Content, $Utf8NoBom)
+}
+
+function Extract-InsertStatements {
+  param([string]$Sql)
+  $lines = $Sql -split "`r?`n"
+  ($lines | Where-Object { $_ -match '^\s*INSERT INTO ' }) -join [Environment]::NewLine
+}
+
+function Fix-MpToolChecklistInserts {
+  param([string]$Sql)
+  return ($Sql -replace '(INSERT INTO mp_checklist\.mp_tool_checklist\s+\([^)]+\))\s+VALUES', '$1 OVERRIDING SYSTEM VALUE VALUES')
+}
+
 Write-Host '==> 1/4 Exporting public schema data from source...'
+$missing = @()
+foreach ($t in $tables) {
+  $exists = psql $SourceDb -tAc "SELECT 1 FROM pg_tables WHERE schemaname='public' AND tablename='$t' LIMIT 1;"
+  if ($exists -ne '1') { $missing += $t }
+}
+if ($missing.Count -gt 0) {
+  Write-Error @"
+SOURCE_DB is missing tables: $($missing -join ', ').
+This usually means the wrong Supabase project in SOURCE_DB.
+MP Tool Checklist production project ref: iotjuquhpqctgsnetmnc (see index.html / HANDOFF).
+Use Dashboard -> Connect -> Session pooler URI for THAT project (not another ref).
+Run: .\supabase\scripts\list-source-tables.ps1
+"@
+}
+
 foreach ($t in $tables) {
   pg_dump $SourceDb `
     --data-only --column-inserts --no-owner --no-privileges `
@@ -43,18 +81,27 @@ Write-Host '==> 2/4 Rewriting schema: public -> mp_checklist...'
 foreach ($t in $tables) {
   $src = Join-Path $OutDir "public_$t.sql"
   $dst = Join-Path $OutDir "mp_checklist_$t.sql"
-  (Get-Content $src -Raw) `
+  $raw = (Read-SqlUtf8 $src) `
     -replace 'INSERT INTO public\.', 'INSERT INTO mp_checklist.' `
-    -replace 'public\.', 'mp_checklist.' |
-    Set-Content $dst -Encoding UTF8
+    -replace 'public\.', 'mp_checklist.'
+  $inserts = Extract-InsertStatements $raw
+  if ($t -eq 'mp_tool_checklist') {
+    $inserts = Fix-MpToolChecklistInserts $inserts
+  }
+  Write-SqlUtf8 $dst $inserts
 }
 
 Write-Host '==> 3/4 Importing into Zeabur (disable FK/trigger checks)...'
-$importParts = @('SET session_replication_role = replica;')
+$importParts = @(
+  'SET client_encoding = ''UTF8'';',
+  'ALTER TABLE mp_checklist.mp_tool_checklist ADD COLUMN IF NOT EXISTS period text;',
+  'SET session_replication_role = replica;',
+  'TRUNCATE mp_checklist.checklist_collaborators, mp_checklist.mp_tool_checklist, mp_checklist.checklists, mp_checklist.profiles CASCADE;'
+)
 
 foreach ($t in $tables) {
   $tableSql = Join-Path $OutDir "mp_checklist_$t.sql"
-  $importParts += Get-Content $tableSql -Raw
+  $importParts += Read-SqlUtf8 $tableSql
 }
 
 $importParts += 'SET session_replication_role = DEFAULT;'
@@ -63,7 +110,7 @@ $importParts += '-- fix mp_tool_checklist.id sequence'
 $importParts += "SELECT setval(pg_get_serial_sequence('mp_checklist.mp_tool_checklist', 'id'), COALESCE((SELECT MAX(id) FROM mp_checklist.mp_tool_checklist), 1));"
 
 $importFile = Join-Path $OutDir '_import_all.sql'
-Set-Content $importFile ($importParts -join [Environment]::NewLine) -Encoding UTF8
+Write-SqlUtf8 $importFile ($importParts -join [Environment]::NewLine)
 
 psql $TargetDb -v ON_ERROR_STOP=1 -f $importFile
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

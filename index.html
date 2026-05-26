@@ -811,6 +811,7 @@
   </div>
 
   <!-- Supabase JS Client -->
+  <script src="/runtime-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     (function() {
@@ -818,8 +819,13 @@
         document.body.innerHTML = '<h3 style="color:red;padding:40px;text-align:center;line-height:1.6;">嚴重錯誤：無法載入 Supabase 核心套件 (CDN 連線失敗)。<br><br>這通常是因為「廣告阻擋工具 (AdBlocker)」或「嚴格追蹤保護」攔截了外部腳本。<br>👉 請嘗試「關閉廣告阻擋」或「使用無痕模式」後重新整理此網頁！</h3>';
         return;
       }
-    const SUPABASE_URL = 'https://iotjuquhpqctgsnetmnc.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlvdGp1cXVocHFjdGdzbmV0bW5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMjE0MjksImV4cCI6MjA4OTg5NzQyOX0.lRgfA3WeNodUKFbjCGeda-YqYwNZTNiKhV3MC-3XyC0';
+    const _rc = window.__MP_RUNTIME__ || {};
+    const SUPABASE_URL = _rc.supabaseUrl || 'https://iotjuquhpqctgsnetmnc.supabase.co';
+    const SUPABASE_KEY =
+      _rc.supabaseAnonKey ||
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlvdGp1cXVocHFjdGdzbmV0bW5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMjE0MjksImV4cCI6MjA4OTg5NzQyOX0.lRgfA3WeNodUKFbjCGeda-YqYwNZTNiKhV3MC-3XyC0';
+    /** 官方 Supabase 用 public；Zeabur 共用實例設為 mp_checklist（見 SUPABASE_DB_SCHEMA） */
+    const DB_SCHEMA = _rc.dbSchema || 'public';
     // 停用 Navigator Locks：避免 getSession / onAuthStateChange / OAuth 同時競爭時出現
     // "Lock ... was released because another request stole it"（單頁應用可接受）
     async function authLockNoOp(_name, _acquireTimeout, fn) {
@@ -835,6 +841,7 @@
         lock: authLockNoOp,
       },
     });
+    const db = () => supabase.schema(DB_SCHEMA);
 
     /** OAuth / Magic Link 回跳：不含 hash（token 由 Supabase 導回時加在 # 或 ?，由 detectSessionInUrl 解析） */
     function authRedirectUrl() {
@@ -1525,7 +1532,7 @@
       if (!grid) return;
       clearStrayEmptyHash();
       try {
-        const { data: publicLists, error } = await supabase
+        const { data: publicLists, error } = await db()
           .from('checklists')
           .select('*, mp_tool_checklist(status), profiles(nickname, email)')
           .eq('is_public', true)
@@ -1549,7 +1556,7 @@
     async function loadDashboard(gen) {
       try {
         // Load My Lists
-        const { data: myLists, error: e1 } = await supabase.from('checklists').select('*, mp_tool_checklist(status), profiles(nickname, email)')
+        const { data: myLists, error: e1 } = await db().from('checklists').select('*, mp_tool_checklist(status), profiles(nickname, email)')
           .eq('user_id', session.user.id).order('created_at', { ascending: false });
 
         if (gen !== renderGeneration) return;
@@ -1561,7 +1568,7 @@
           myGrid.innerHTML = myLists.map(l => buildCardHTML(l, 'mine')).join('');
         }
 
-        const { data: collabRows, error: eShared } = await supabase
+        const { data: collabRows, error: eShared } = await db()
           .from('checklist_collaborators')
           .select('checklist_id, checklists(id, title, created_at, user_id, is_public, collaboration_enabled, mp_tool_checklist(status), profiles(nickname, email))')
           .eq('user_id', session.user.id);
@@ -1587,7 +1594,7 @@
         }
 
       // Load Others Public Lists
-      const { data: publicLists, error: e2 } = await supabase.from('checklists').select('*, mp_tool_checklist(status), profiles(nickname, email)')
+      const { data: publicLists, error: e2 } = await db().from('checklists').select('*, mp_tool_checklist(status), profiles(nickname, email)')
         .eq('is_public', true).neq('user_id', session.user.id).order('created_at', { ascending: false });
 
         if (gen !== renderGeneration) return;
@@ -1606,7 +1613,7 @@
     window.setNickname = async () => {
       const nick = prompt('請輸入您希望對外公開顯示的稱呼：\n(若為空白，系統將預設顯示您的 Email)');
       if (nick === null) return;
-      const { error } = await supabase.from('profiles').update({ nickname: nick.trim() || null }).eq('id', session.user.id);
+      const { error } = await db().from('profiles').update({ nickname: nick.trim() || null }).eq('id', session.user.id);
       if (error) alert('設定暱稱失敗: ' + error.message);
       else {
         showToast('✨ 暱稱已成功更新！');
@@ -1687,9 +1694,9 @@
     };
 
     async function deleteChecklistCascade(checklistId) {
-      const { error: e1 } = await supabase.from('mp_tool_checklist').delete().eq('checklist_id', checklistId);
+      const { error: e1 } = await db().from('mp_tool_checklist').delete().eq('checklist_id', checklistId);
       if (e1) return { error: e1 };
-      const { error: e2 } = await supabase
+      const { error: e2 } = await db()
         .from('checklists')
         .delete()
         .eq('id', checklistId)
@@ -1734,7 +1741,7 @@
 
     // --- Detail View ---
     async function loadChecklistDetail() {
-      const { data: listData, error: listError } = await supabase.from('checklists')
+      const { data: listData, error: listError } = await db().from('checklists')
         .select('*, profiles(nickname, email)').eq('id', listId).single();
 
       if (listError || !listData) {
@@ -1758,7 +1765,7 @@
       isOwner = !!(session && session.user.id === currentChecklist.user_id);
       isCollaborator = false;
       if (session && !isOwner) {
-        const { data: crow, error: crowErr } = await supabase
+        const { data: crow, error: crowErr } = await db()
           .from('checklist_collaborators')
           .select('user_id')
           .eq('checklist_id', listId)
@@ -1813,7 +1820,7 @@
       const ul = document.getElementById('collaboratorListUl');
       if (!ul || !listId) return;
       ul.innerHTML = '<li style="cursor:default;color:#94a3b8;">載入中…</li>';
-      const { data: rows, error } = await supabase
+      const { data: rows, error } = await db()
         .from('checklist_collaborators')
         .select('user_id, invited_email, created_at')
         .eq('checklist_id', listId)
@@ -1859,7 +1866,7 @@
         alert('請輸入對方的 Email');
         return;
       }
-      const { data: rpcResult, error } = await supabase.rpc('add_checklist_collaborator_by_email', {
+      const { data: rpcResult, error } = await db().rpc('add_checklist_collaborator_by_email', {
         p_checklist_id: listId,
         p_email: email,
       });
@@ -1880,7 +1887,7 @@
     window.removeCollaboratorByUserId = async function (userId) {
       if (!isOwner || !listId || !userId) return;
       if (!confirm('確定移除此協作者？對方將無法再存取此進度表（除非表為公開）。')) return;
-      const { error } = await supabase
+      const { error } = await db()
         .from('checklist_collaborators')
         .delete()
         .eq('checklist_id', listId)
@@ -1906,7 +1913,7 @@
         return;
       }
       const v = this.checked;
-      const { error } = await supabase.from('checklists').update({ collaboration_enabled: v }).eq('id', listId);
+      const { error } = await db().from('checklists').update({ collaboration_enabled: v }).eq('id', listId);
       if (error) {
         this.checked = !v;
         alert('更新失敗：' + error.message);
@@ -1944,7 +1951,7 @@
         );
         if (!ok) return;
       }
-      const { error } = await supabase.from('checklists').update({ is_public: newVal }).eq('id', listId);
+      const { error } = await db().from('checklists').update({ is_public: newVal }).eq('id', listId);
       if (!error) {
         currentChecklist.is_public = newVal;
         updateToggleBtnUI(newVal);
@@ -1956,7 +1963,7 @@
     };
 
     async function loadItems() {
-      const { data: itemsData, error } = await supabase.from('mp_tool_checklist').select('*').eq('checklist_id', listId).order('id', { ascending: true });
+      const { data: itemsData, error } = await db().from('mp_tool_checklist').select('*').eq('checklist_id', listId).order('id', { ascending: true });
       if (error) return console.error(error);
       highlightNewRowId = null;
       data = (itemsData || []).map((r) => normalizeRow({ ...r }));
@@ -1995,9 +2002,9 @@
         tool_version: cells.tool_version != null ? cells.tool_version : '',
         branch: cells.branch != null ? cells.branch : '',
       };
-      let { data: newItem, error } = await supabase.from('mp_tool_checklist').insert([base]).select().single();
+      let { data: newItem, error } = await db().from('mp_tool_checklist').insert([base]).select().single();
       if (error && /cells|column/i.test(error.message || '')) {
-        ({ data: newItem, error } = await supabase
+        ({ data: newItem, error } = await db()
           .from('mp_tool_checklist')
           .insert([
             {
@@ -2063,9 +2070,9 @@
       if (columnModalCreateMode) {
         if (!session?.user?.id) return;
         const base = { user_id: session.user.id, title: newTitle, is_public: false, form_columns: next };
-        let { data: newList, error } = await supabase.from('checklists').insert([base]).select().single();
+        let { data: newList, error } = await db().from('checklists').insert([base]).select().single();
         if (error && /form_columns|column/i.test(error.message || '')) {
-          ({ data: newList, error } = await supabase
+          ({ data: newList, error } = await db()
             .from('checklists')
             .insert([{ user_id: session.user.id, title: newTitle, is_public: false }])
             .select()
@@ -2098,7 +2105,7 @@
         }
       }
 
-      const { error } = await supabase
+      const { error } = await db()
         .from('checklists')
         .update({ form_columns: next, title: newTitle })
         .eq('id', listId);
@@ -2129,7 +2136,7 @@
         }
         row.cells = cells;
         const payload = { ...payloadFromCells(cells), updated_at: new Date().toISOString() };
-        const { error: err2 } = await supabase.from('mp_tool_checklist').update(payload).eq('id', row.id);
+        const { error: err2 } = await db().from('mp_tool_checklist').update(payload).eq('id', row.id);
         if (err2) {
           alert('更新列資料失敗: ' + err2.message);
           return;
@@ -2155,7 +2162,7 @@
     window.deleteRow = async (id) => {
       if (!canEditTable) return;
       if (!confirm('確定要刪除這個項目嗎？')) return;
-      const { error } = await supabase.from('mp_tool_checklist').delete().eq('id', id);
+      const { error } = await db().from('mp_tool_checklist').delete().eq('id', id);
       if (error) alert('刪除失敗: ' + error.message);
       else {
         if (String(highlightNewRowId) === String(id)) highlightNewRowId = null;
@@ -2242,7 +2249,7 @@
       if (!canEditTable) return;
       const newStatus = select.value;
       select.dataset.status = newStatus;
-      const { error } = await supabase.from('mp_tool_checklist').update({ status: newStatus, checked: newStatus === '已完成', updated_at: new Date().toISOString() }).eq('id', id);
+      const { error } = await db().from('mp_tool_checklist').update({ status: newStatus, checked: newStatus === '已完成', updated_at: new Date().toISOString() }).eq('id', id);
       if (!error) {
         const row = data.find((r) => String(r.id) === String(id));
         row.status = newStatus; row.checked = newStatus === '已完成';
@@ -2305,13 +2312,13 @@
       const cells = { ...(row.cells || legacyCellsFromRow(row)) };
       cells[colId] = newVal;
       const payload = { ...payloadFromCells(cells), updated_at: new Date().toISOString() };
-      let { error } = await supabase.from('mp_tool_checklist').update(payload).eq('id', row.id);
+      let { error } = await db().from('mp_tool_checklist').update(payload).eq('id', row.id);
       if (error && /cells|column/i.test(error.message || '')) {
         const legacy = {};
         if (colId === 'tool_version') legacy.tool_version = newVal;
         if (colId === 'branch') legacy.branch = newVal;
         if (Object.keys(legacy).length) {
-          ({ error } = await supabase
+          ({ error } = await db()
             .from('mp_tool_checklist')
             .update({ ...legacy, updated_at: new Date().toISOString() })
             .eq('id', row.id));

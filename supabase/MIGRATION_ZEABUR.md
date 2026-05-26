@@ -194,33 +194,15 @@ https://<zeabur-supabase-host>/auth/v1/callback
 
 ## 步驟六：更新前端
 
-目前 `index.html` 連線官方 Supabase 且使用預設 `public` schema。切換至 Zeabur 後需修改兩處。
+前端已支援環境變數切換（見 repo 根目錄 `.env.example`）。部署時設定：
 
-### 6.1 更新連線資訊
-
-```javascript
-const SUPABASE_URL = 'https://<zeabur-supabase-host>';
-const SUPABASE_KEY = '<zeabur-anon-key>';
+```env
+SUPABASE_URL=https://<zeabur-supabase-host>
+SUPABASE_ANON_KEY=<zeabur-anon-key>
+SUPABASE_DB_SCHEMA=mp_checklist
 ```
 
-建議改為從部署環境變數注入，避免 key 寫死在 repo。
-
-### 6.2 指定 schema
-
-所有資料庫操作改為透過 `mp_checklist` schema：
-
-```javascript
-const DB_SCHEMA = 'mp_checklist';
-const db = () => supabase.schema(DB_SCHEMA);
-
-// 查詢
-await db().from('checklists').select('...');
-
-// RPC
-await db().rpc('add_checklist_collaborator_by_email', { ... });
-```
-
-需修改的位置包含所有 `.from('profiles'|'checklists'|'mp_tool_checklist'|'checklist_collaborators')` 及 `.rpc('add_checklist_collaborator_by_email', ...)`。
+`server.js` 會提供 `/runtime-config.js`；`index.html` 透過 `db()` 存取資料（`db()` = `supabase.schema(DB_SCHEMA)`）。未設 `SUPABASE_DB_SCHEMA` 時預設 `public`，可繼續連官方 Supabase 直到 migration 完成。
 
 ---
 
@@ -276,7 +258,8 @@ await db().rpc('add_checklist_collaborator_by_email', { ... });
 | `supabase/migrations/002_drop_mp_tool_checklist_tool_version_unique.sql` | 官方 `public` 增量（000 未含該 unique） |
 | `supabase/migrations/003_checklist_collaborators.sql` | 官方 `public` 增量（已併入 000） |
 | `supabase/migrations/004_fix_checklists_rls_recursion.sql` | 官方 `public` 增量（已併入 000） |
-| `supabase/scripts/migrate-data-to-zeabur.ps1` | 資料匯出／轉換／匯入腳本 |
+| `supabase/scripts/migrate-data-to-zeabur.ps1` | 業務資料匯出／轉換／匯入腳本 |
+| `supabase/scripts/migrate-auth-to-zeabur.ps1` | auth.users + auth.identities 遷移腳本 |
 
 > `001`～`004` 為當初在**官方 Supabase `public` schema** 上逐步套用的 migration。移植至 Zeabur 共用實例時，只需執行 **`000_mp_checklist_schema.sql`**，不必再跑 001～004。
 
